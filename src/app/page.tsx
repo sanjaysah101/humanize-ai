@@ -1,7 +1,5 @@
+import { Home as HomeComponent } from '../components/Home';
+
 export default function Home() {
-  return (
-    <div>
-      <h1>Humanize AI</h1>
-    </div>
-  );
+  return <HomeComponent />;
 }
