@@ -1,93 +1,114 @@
 'use client';
 
-import { useState } from 'react';
-import { transformText } from '@/app/actions/text';
+import { useState, useTransition, useEffect } from 'react';
 import {
-  Textarea,
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Label,
-} from './ui';
+  TransformationOptions,
+  TransformationResponse,
+  TransformationListItem,
+} from '@/core/entities/transformation';
+import { transformText } from '@/app/actions/transform';
 
 export const Home = () => {
-  const [inputText, setInputText] = useState<string>('');
-  const [formality, setFormality] = useState<'informal' | 'formal'>('informal');
-  const [outputText, setOutputText] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [text, setText] = useState('');
+  const [result, setResult] = useState<TransformationResponse | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const handleTransform = async () => {
-    setIsLoading(true);
-    try {
-      const result = await transformText(inputText, {
-        formality,
-        creativity: 0.3,
-        preserveIntent: true,
-      });
-      setOutputText(result);
-    } catch (error) {
-      console.error('Error transforming text:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const defaultOptions: TransformationOptions = {
+    formality: 'formal',
+    creativity: 0.7,
+    preserveIntent: true,
+    emotionalTone: 'neutral',
+    varietyLevel: 0.5,
+    contextPreservation: 0.8,
   };
 
+  const handleTransform = () => {
+    startTransition(async () => {
+      try {
+        const response = await transformText(text, defaultOptions);
+        setResult(response);
+      } catch (error) {
+        console.error('Error:', error);
+        setResult({
+          success: false,
+          error: 'Failed to transform text',
+        });
+      }
+    });
+  };
+
+  if (!mounted) {
+    return null; // or a loading spinner
+  }
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">AI Text Humanizer</h1>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Text Transformation Test</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Input Column */}
-        <div className="space-y-6">
-          <div>
-            <Label htmlFor="inputText" className="text-lg">
-              Input Text
-            </Label>
-            <Textarea
-              id="inputText"
-              placeholder="Enter AI-generated text here"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              className="mt-2"
-              rows={10}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="formality" className="text-lg">
-              Formality
-            </Label>
-            <Select
-              value={formality}
-              onValueChange={(value) =>
-                setFormality(value as 'informal' | 'formal')
-              }
-            >
-              <SelectTrigger className="mt-2">
-                <SelectValue placeholder="Select formality" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="informal">Informal</SelectItem>
-                <SelectItem value="formal">Formal</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button onClick={handleTransform} disabled={isLoading}>
-            {isLoading ? 'Transforming...' : 'Transform Text'}
-          </Button>
-        </div>
-
-        {/* Output Column */}
+      <div className="space-y-4">
         <div>
-          <h3 className="text-2xl font-semibold mb-4">Humanized Output</h3>
-          <div className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap min-h-[200px]">
-            {outputText}
-          </div>
+          <label className="block mb-2" htmlFor="inputText">
+            Input Text:
+          </label>
+          <textarea
+            id="inputText"
+            className="w-full p-2 border rounded-md"
+            rows={4}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Enter text to transform..."
+          />
         </div>
+
+        <button
+          type="button"
+          onClick={handleTransform}
+          disabled={isPending || !text}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+        >
+          {isPending ? 'Transforming...' : 'Transform Text'}
+        </button>
+
+        {result && mounted && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Result:</h2>
+            <div className="bg-gray-50 p-4 rounded-md">
+              {result.success && result.data && (
+                <>
+                  <div className="mb-4">
+                    <h3 className="font-medium">Transformed Text:</h3>
+                    <p className="mt-1">{result.data.transformedText}</p>
+                  </div>
+
+                  {result.data.transformations.length > 0 && (
+                    <div>
+                      <h3 className="font-medium">Transformations:</h3>
+                      <ul className="mt-1 space-y-1">
+                        {result.data.transformations.map(
+                          (t: TransformationListItem, i: number) => (
+                            <li key={`transform-${i}`} className="text-sm">
+                              {t.original} → {t.replacement} ({t.type},
+                              confidence: {t.confidence.toFixed(2)})
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!result.success && result.error && (
+                <div className="text-red-500">Error: {result.error}</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
