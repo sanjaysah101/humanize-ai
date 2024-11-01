@@ -137,16 +137,24 @@ export class SyntaxTransformer {
 
     // Apply different sentence structures based on formality and creativity
     if (options.formality === 'formal' && options.creativity > 0.7) {
-      // Complex sentence structures for formal, creative text
-      text = this.applyComplexStructure(doc);
-      confidence *= 0.7;
+      const { text: transformedText, confidence: structureConfidence } =
+        this.applyComplexStructure(doc);
+      text = transformedText;
+      confidence *= structureConfidence;
     } else if (options.formality === 'informal' && options.creativity < 0.3) {
-      // Simple sentence structures for informal, less creative text
-      text = this.applySimpleStructure(doc);
-      confidence *= 0.9;
+      const { text: transformedText, confidence: structureConfidence } =
+        this.applySimpleStructure(doc);
+      text = transformedText;
+      confidence *= structureConfidence;
     }
 
-    return { text, confidence };
+    return {
+      text,
+      confidence: Math.max(
+        confidence,
+        CONFIDENCE_THRESHOLDS.MIN_SENTENCE_SCORE
+      ),
+    };
   }
 
   private getPassiveForm(verb: string): string {
@@ -178,16 +186,22 @@ export class SyntaxTransformer {
     return irregularForms[participle] || participle.replace(/ed$/, 's');
   }
 
-  private applyComplexStructure(doc: ReturnType<typeof nlp>): string {
+  private applyComplexStructure(doc: ReturnType<typeof nlp>): {
+    text: string;
+    confidence: number;
+  } {
     // Implement complex sentence structure transformations
     // This is a placeholder implementation
-    return doc.text();
+    return { text: doc.text(), confidence: 0.7 };
   }
 
-  private applySimpleStructure(doc: ReturnType<typeof nlp>): string {
+  private applySimpleStructure(doc: ReturnType<typeof nlp>): {
+    text: string;
+    confidence: number;
+  } {
     // Implement simple sentence structure transformations
     // This is a placeholder implementation
-    return doc.text();
+    return { text: doc.text(), confidence: 0.9 };
   }
 
   private splitIntoSentences(text: string): string[] {

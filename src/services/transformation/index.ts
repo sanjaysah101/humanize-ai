@@ -11,16 +11,26 @@ import { EmotionalToneAnalyzer } from '@/services/analysis/emotionalToneAnalyzer
 import { EmotionalTone } from '@/core/entities/transformation';
 import { SynonymResult } from '@/core/interfaces/synonymProvider';
 import { TransformationChange } from '@/core/entities/transformation';
+import { TransformerModel } from '../ai/transformerModel';
+import {
+  AuthenticityScore,
+  AuthenticityVerifier,
+} from '../verification/authenticityVerifier';
+import { TransformationModels } from '@/lib/math/transformationModels';
 
 export class TextTransformer implements ITransformer {
   private wordLevelTransformer: WordLevelTransformer;
   private syntaxTransformer: SyntaxTransformer;
   private emotionalAnalyzer: EmotionalToneAnalyzer;
+  private transformerModel: TransformerModel;
+  private authenticityVerifier: AuthenticityVerifier;
 
   constructor(synonymProvider: ISynonymProvider) {
     this.wordLevelTransformer = new WordLevelTransformer(synonymProvider);
     this.syntaxTransformer = new SyntaxTransformer();
     this.emotionalAnalyzer = new EmotionalToneAnalyzer();
+    this.transformerModel = new TransformerModel();
+    this.authenticityVerifier = new AuthenticityVerifier();
   }
 
   async transform(
@@ -52,8 +62,8 @@ export class TextTransformer implements ITransformer {
         })),
       ];
 
-      // Calculate overall confidence
-      const confidence = this.calculateOverallConfidence(allChanges);
+      // Calculate overall confidence from word and syntax changes
+      const initialConfidence = this.calculateOverallConfidence(allChanges);
 
       // Apply emotional tone adjustments if needed
       const finalText =
@@ -61,10 +71,39 @@ export class TextTransformer implements ITransformer {
           ? await this.adjustEmotionalTone(syntaxResult.text, options)
           : syntaxResult.text;
 
+      // Apply initial transformation
+      let transformedText = await this.transformerModel.generateHumanlikeText(
+        finalText,
+        options
+      );
+
+      // Verify authenticity
+      const authenticityScore =
+        await this.authenticityVerifier.verifyAuthenticity(transformedText);
+
+      // Apply mathematical models if needed
+      if (authenticityScore.overall < 0.85) {
+        const markovModel =
+          TransformationModels.markovTransitionMatrix(transformedText);
+        // Apply Markov model transformations
+        transformedText = this.applyMarkovTransformations(
+          transformedText,
+          markovModel
+        );
+      }
+
+      // Calculate final confidence score combining all factors
+      const finalConfidence =
+        this.calculateConfidence(
+          finalText,
+          transformedText,
+          authenticityScore
+        ) * initialConfidence; // Multiply by initial confidence
+
       return {
         originalText: text,
-        transformedText: finalText,
-        confidence,
+        transformedText: transformedText,
+        confidence: finalConfidence,
         transformations: allChanges,
       };
     } catch (error) {
@@ -121,6 +160,7 @@ export class TextTransformer implements ITransformer {
       )
     );
 
+    // Calculate average score
     return scores.reduce((acc, score) => acc + score, 0) / scores.length;
   }
 
@@ -192,5 +232,47 @@ export class TextTransformer implements ITransformer {
     });
 
     return weightedConfidences.reduce((acc, conf) => acc * conf, 1);
+  }
+
+  private calculateConfidence(
+    original: string,
+    transformed: string,
+    authenticityScore: AuthenticityScore
+  ): number {
+    const levenshteinDistance =
+      TransformationModels.weightedLevenshteinDistance(original, transformed, {
+        insertion: 1,
+        deletion: 1,
+        substitution: 2,
+      });
+
+    return (
+      (authenticityScore.overall +
+        (1 - levenshteinDistance / original.length)) /
+      2
+    );
+  }
+
+  private applyMarkovTransformations(
+    text: string,
+    markovModel: Map<string, Map<string, number>>
+  ): string {
+    const words = text.split(/\s+/);
+    const transformedWords = words.map((word, index) => {
+      if (index === 0) return word;
+
+      const previousWord = words[index - 1];
+      const transitions = markovModel.get(previousWord);
+
+      if (transitions && transitions.size > 0) {
+        const alternatives = Array.from(transitions.entries());
+        const randomIndex = Math.floor(Math.random() * alternatives.length);
+        return alternatives[randomIndex][0];
+      }
+
+      return word;
+    });
+
+    return transformedWords.join(' ');
   }
 }
