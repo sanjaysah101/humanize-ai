@@ -1,4 +1,9 @@
-export type EmotionalTone = 'neutral' | 'positive' | 'negative' | 'professional' | 'casual';
+export type EmotionalTone =
+  | 'neutral'
+  | 'positive'
+  | 'negative'
+  | 'professional'
+  | 'casual';
 
 export interface TransformationOptions {
   formality: 'informal' | 'formal';
@@ -34,4 +39,4 @@ export interface TransformationListItem {
   replacement: string;
   type: 'word' | 'syntax' | 'emotional';
   confidence: number;
-} 
+}

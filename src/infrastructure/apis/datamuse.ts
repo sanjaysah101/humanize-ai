@@ -1,20 +1,27 @@
-import {
-  ISynonymProvider,
-  SynonymResult,
-} from '@/core/interfaces/synonymProvider';
+import { ISynonymProvider } from '@/core/interfaces/synonymProvider';
+import { SynonymResult } from '@/core/interfaces/synonymProvider';
+import { ICache } from '@/core/interfaces/cache';
+import { CONFIDENCE_THRESHOLDS } from '@/lib/constants/transformation';
 
 export class DatamuseSynonymProvider implements ISynonymProvider {
-  private readonly baseUrl = 'https://api.datamuse.com/words';
-  private lastCallTime: number = 0;
-  private readonly minCallInterval = 100; // milliseconds
+  private baseUrl = 'https://api.datamuse.com/words';
+  private cache: ICache;
+
+  constructor(cache: ICache) {
+    this.cache = cache;
+  }
 
   async getSynonyms(word: string): Promise<SynonymResult[]> {
-    // Rate limiting
-    await this.throttle();
-
     try {
+      // Check cache first
+      const cached = await this.cache.get<string>(`synonym:${word}`);
+      if (cached) {
+        return JSON.parse(cached) as SynonymResult[];
+      }
+
+      // Fetch from API if not cached
       const response = await fetch(
-        `${this.baseUrl}?rel=syn&word=${encodeURIComponent(word)}`
+        `${this.baseUrl}?rel_syn=${encodeURIComponent(word)}&md=p`
       );
 
       if (!response.ok) {
@@ -22,39 +29,65 @@ export class DatamuseSynonymProvider implements ISynonymProvider {
       }
 
       const data = await response.json();
+      const synonyms = this.processApiResponse(data, word);
 
-      return data.map(
-        (item: { word: string; score: number; tags?: string[] }) => ({
-          word: item.word,
-          score: item.score / 100000, // Normalize score to 0-1
-          tags: item.tags,
-        })
+      // Cache the results
+      await this.cache.set<string>(
+        `synonym:${word}`,
+        JSON.stringify(synonyms),
+        60 * 60 // 1 hour cache
       );
+
+      return synonyms;
     } catch (error) {
-      console.error('Datamuse API error:', error);
+      console.error('Error fetching synonyms:', error);
       return [];
     }
   }
 
-  async isAvailable(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.baseUrl}?rel=syn&word=test`);
-      return response.ok;
-    } catch {
-      return false;
-    }
+  private processApiResponse(
+    data: Array<{ word: string; score: number; tags?: string[] }>,
+    originalWord: string
+  ): SynonymResult[] {
+    return data
+      .filter(item => 
+        item.word !== originalWord && 
+        this.isValidSynonym(item.word)
+      )
+      .map(item => ({
+        word: item.word,
+        score: this.normalizeScore(item.score),
+        tags: this.processTags(item.tags || [])
+      }))
+      .filter(syn => syn.score >= CONFIDENCE_THRESHOLDS.MIN_WORD_SCORE);
   }
 
-  private async throttle(): Promise<void> {
-    const now = Date.now();
-    const timeSinceLastCall = now - this.lastCallTime;
+  private normalizeScore(score: number): number {
+    // Datamuse scores typically range from 0 to ~100000
+    const normalized = Math.min(score / 100000, 1);
+    return Math.max(CONFIDENCE_THRESHOLDS.MIN_WORD_SCORE, normalized);
+  }
 
-    if (timeSinceLastCall < this.minCallInterval) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, this.minCallInterval - timeSinceLastCall)
-      );
-    }
+  private processTags(tags: string[]): string[] {
+    const tagMap: Record<string, string> = {
+      'n': 'Noun',
+      'v': 'Verb',
+      'adj': 'Adjective',
+      'adv': 'Adverb',
+      'prep': 'Preposition'
+    };
 
-    this.lastCallTime = Date.now();
+    return tags
+      .map(tag => tagMap[tag] || tag)
+      .filter(tag => tag in tagMap);
+  }
+
+  private isValidSynonym(word: string): boolean {
+    return (
+      word.length > 1 &&
+      !/[^a-zA-Z\-']/.test(word) && // Only letters, hyphens, and apostrophes
+      !word.startsWith('-') &&
+      !word.endsWith('-')
+    );
   }
 }

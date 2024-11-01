@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import {
   TransformationOptions,
   TransformationResponse,
@@ -8,24 +8,19 @@ import {
 } from '@/core/entities/transformation';
 import { transformText } from '@/app/actions/transform';
 
+const defaultOptions: TransformationOptions = {
+  formality: 'formal',
+  creativity: 0.7,
+  preserveIntent: true,
+  emotionalTone: 'neutral',
+  varietyLevel: 0.5,
+  contextPreservation: 0.8,
+};
+
 export const Home = () => {
-  const [mounted, setMounted] = useState(false);
   const [text, setText] = useState('');
   const [result, setResult] = useState<TransformationResponse | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const defaultOptions: TransformationOptions = {
-    formality: 'formal',
-    creativity: 0.7,
-    preserveIntent: true,
-    emotionalTone: 'neutral',
-    varietyLevel: 0.5,
-    contextPreservation: 0.8,
-  };
 
   const handleTransform = () => {
     startTransition(async () => {
@@ -41,10 +36,6 @@ export const Home = () => {
       }
     });
   };
-
-  if (!mounted) {
-    return null; // or a loading spinner
-  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -74,7 +65,7 @@ export const Home = () => {
           {isPending ? 'Transforming...' : 'Transform Text'}
         </button>
 
-        {result && mounted && (
+        {result && (
           <div className="mt-6">
             <h2 className="text-xl font-semibold mb-2">Result:</h2>
             <div className="bg-gray-50 p-4 rounded-md">
