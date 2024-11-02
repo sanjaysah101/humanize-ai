@@ -1,6 +1,7 @@
-import nlp from 'compromise';
-import { std, mean } from 'mathjs';
-import { CONFIDENCE_THRESHOLDS } from '@/lib/constants/transformation';
+import nlp from "compromise";
+import { mean, std } from "mathjs";
+
+import { CONFIDENCE_THRESHOLDS } from "@/lib/constants/transformation";
 
 export class LanguageMetrics {
   private nlpProcessor: typeof nlp;
@@ -16,24 +17,16 @@ export class LanguageMetrics {
       grammarConsistency: this.analyzeGrammarConsistency(text),
     };
 
-    return (
-      (metrics.sentenceVariety +
-        metrics.vocabularyRichness +
-        metrics.grammarConsistency) /
-      3
-    );
+    return (metrics.sentenceVariety + metrics.vocabularyRichness + metrics.grammarConsistency) / 3;
   }
 
   private analyzeSentenceVariety(text: string): number {
     const doc = this.nlpProcessor(text);
-    const sentences = doc.sentences().out('array');
-    const lengths = sentences.map((s: string) => s.split(' ').length);
+    const sentences = doc.sentences().out("array");
+    const lengths = sentences.map((s: string) => s.split(" ").length);
     const variety = std(lengths) / mean(lengths);
 
-    return Math.min(
-      1,
-      Math.max(CONFIDENCE_THRESHOLDS.MIN_SENTENCE_SCORE, variety)
-    );
+    return Math.min(1, Math.max(CONFIDENCE_THRESHOLDS.MIN_SENTENCE_SCORE, variety));
   }
 
   private analyzeVocabularyRichness(text: string): number {
@@ -48,7 +41,8 @@ export class LanguageMetrics {
     let validStructures = 0;
 
     sentences.forEach((sentence) => {
-      if (this.hasValidGrammarStructure(sentence)) {
+      const sentenceDoc = this.nlpProcessor(sentence.text());
+      if (this.hasValidGrammarStructure(sentenceDoc)) {
         validStructures++;
       }
     });
@@ -56,7 +50,7 @@ export class LanguageMetrics {
     return validStructures / sentences.length;
   }
 
-  private hasValidGrammarStructure(sentence: any): boolean {
-    return sentence.has('#Subject') && sentence.has('#Verb');
+  private hasValidGrammarStructure(sentence: ReturnType<typeof nlp>): boolean {
+    return sentence.has("#Subject") && sentence.has("#Verb");
   }
 }

@@ -1,11 +1,14 @@
-import { TransformationOptions, TransformationResult } from '../entities/transformation';
+import { TransformationOptions, TransformationResult } from "../entities/transformation";
 
 export interface ITransformer {
   transform(text: string, options: TransformationOptions): Promise<TransformationResult>;
 }
 
 export interface IWordTransformer {
-  transform(text: string, options: TransformationOptions): Promise<{
+  transform(
+    text: string,
+    options: TransformationOptions
+  ): Promise<{
     text: string;
     changes: Array<{
       original: string;
@@ -16,7 +19,10 @@ export interface IWordTransformer {
 }
 
 export interface ISyntaxTransformer {
-  transform(text: string, options: TransformationOptions): {
+  transform(
+    text: string,
+    options: TransformationOptions
+  ): {
     text: string;
     changes: Array<{
       original: string;
@@ -24,4 +30,4 @@ export interface ISyntaxTransformer {
       confidence: number;
     }>;
   };
-} 
+}

@@ -1,23 +1,18 @@
-import { TransformationOptions, TransformationResult } from '../entities/transformation';
-import { ICache } from '../interfaces/cache';
-import { ISynonymProvider } from '../interfaces/synonymProvider';
-import { ITransformer } from '../interfaces/transformer';
+import { TransformationOptions, TransformationResult } from "../entities/transformation";
+import { ICache } from "../interfaces/cache";
+import { ITransformer } from "../interfaces/transformer";
 
 export class TextTransformationUseCase {
   constructor(
     private readonly transformer: ITransformer,
-    private readonly synonymProvider: ISynonymProvider,
     private readonly cache: ICache
   ) {}
 
-  async transform(
-    text: string,
-    options: TransformationOptions
-  ): Promise<TransformationResult> {
+  async transform(text: string, options: TransformationOptions): Promise<TransformationResult> {
     // Try to get from cache first
     const cacheKey = this.generateCacheKey(text, options);
     const cachedResult = await this.cache.get<TransformationResult>(cacheKey);
-    
+
     if (cachedResult) {
       return cachedResult;
     }
@@ -32,6 +27,6 @@ export class TextTransformationUseCase {
   }
 
   private generateCacheKey(text: string, options: TransformationOptions): string {
-    return `transform:${Buffer.from(text).toString('base64')}:${JSON.stringify(options)}`;
+    return `transform:${Buffer.from(text).toString("base64")}:${JSON.stringify(options)}`;
   }
-} 
+}

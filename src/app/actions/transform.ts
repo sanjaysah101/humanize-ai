@@ -1,31 +1,21 @@
-'use server';
+"use server";
 
-import { DatamuseSynonymProvider } from '@/infrastructure/apis/datamuse';
-import { MemoryCache } from '@/infrastructure/cache/memory';
-import { TextTransformer } from '@/services/transformation';
-import { TextTransformationUseCase } from '@/core/useCases/textTransformation';
-import {
-  TransformationOptions,
-  TransformationResponse,
-} from '@/core/entities/transformation';
+import { TransformationOptions, TransformationResponse } from "@/core/entities/transformation";
+import { TextTransformationUseCase } from "@/core/useCases/textTransformation";
+import { DatamuseSynonymProvider } from "@/infrastructure/apis/datamuse";
+import { MemoryCache } from "@/infrastructure/cache/memory";
+import { TextTransformer } from "@/services/transformation";
 
 // Initialize dependencies
 const synonymProvider = new DatamuseSynonymProvider(new MemoryCache());
 const transformer = new TextTransformer(synonymProvider);
-const transformationUseCase = new TextTransformationUseCase(
-  transformer,
-  synonymProvider,
-  new MemoryCache()
-);
+const transformationUseCase = new TextTransformationUseCase(transformer, new MemoryCache());
 
-export async function transformText(
-  text: string,
-  options: TransformationOptions
-): Promise<TransformationResponse> {
+export const transformText = async (text: string, options: TransformationOptions): Promise<TransformationResponse> => {
   if (!text || text.trim().length === 0) {
     return {
       success: false,
-      error: 'Please provide text to transform',
+      error: "Please provide text to transform",
     };
   }
 
@@ -47,11 +37,10 @@ export async function transformText(
         })),
       },
     };
-  } catch (error) {
-    console.error('Transformation error:', error);
+  } catch {
     return {
       success: false,
-      error: 'Failed to transform text',
+      error: "Failed to transform text",
     };
   }
-}
+};

@@ -1,244 +1,308 @@
-import { TransformationOptions } from '@/core/entities/transformation';
-import { CONFIDENCE_THRESHOLDS } from '@/lib/constants/transformation';
-import nlp from 'compromise';
+import nlp from "compromise";
+import sentences from "compromise-sentences";
+import natural from "natural";
 
-interface NlpTerm {
-  text: string;
-  tags: string[];
-  normal?: string;
-  implicit?: string;
-}
+import { TransformationChange, TransformationOptions } from "@/core/entities/transformation";
+import { CONFIDENCE_THRESHOLDS } from "@/lib/constants/transformation";
+
+nlp.extend(sentences);
 
 export class SyntaxTransformer {
+  private tokenizer: natural.WordTokenizer;
+  private tagger: natural.BrillPOSTagger;
   private nlpProcessor: typeof nlp;
 
   constructor() {
+    this.tokenizer = new natural.WordTokenizer();
+
+    // Create lexicon with default category
+    const lexicon = new natural.Lexicon("EN", "NN", "NNP");
+
+    // Create ruleset for English
+    const ruleSet = new natural.RuleSet("EN");
+
+    // Initialize tagger with lexicon and ruleset
+    this.tagger = new natural.BrillPOSTagger(lexicon, ruleSet);
+
     this.nlpProcessor = nlp;
   }
 
   transform(text: string, options: TransformationOptions) {
-    const sentences = this.splitIntoSentences(text);
-    const transformedSentences = sentences.map((sentence: string) =>
-      this.transformSentence(sentence, options)
-    );
+    const doc = nlp(text);
+    const tokens = this.tokenizer.tokenize(text);
+    const taggedSentence = this.tagger.tag(tokens);
+
+    // Extract tags from the Sentence object
+    const tagged = taggedSentence.taggedWords.map((word) => word.tag);
 
     return {
-      text: transformedSentences.map((t) => t.text).join(' '),
-      changes: transformedSentences
-        .filter((t) => t.original !== t.text)
-        .map((t) => ({
-          original: t.original,
-          replacement: t.text,
-          type: 'syntax' as const,
-          confidence: t.confidence,
-        })),
+      text: this.applyTransformations(doc, tagged, options),
+      confidence: this.calculateConfidence(tagged),
+      changes: this.trackChanges(doc, tagged),
     };
   }
 
-  private transformSentence(
-    sentence: string,
-    options: TransformationOptions
-  ): { original: string; text: string; confidence: number } {
-    let transformed = sentence.trim();
-    let confidence = 1;
+  private applyTransformations(doc: ReturnType<typeof nlp>, tagged: string[], options: TransformationOptions): string {
+    let transformedText = doc.text();
+    const sentences = doc.sentences().out("array");
 
-    // Apply formality transformations
-    if (options.formality === 'formal') {
-      transformed = this.formalizeText(transformed);
-      confidence *= 0.9;
-    } else {
-      transformed = this.casualizeText(transformed);
-      confidence *= 0.9;
+    // Apply transformations with more conservative thresholds
+    if (options.formality === "formal") {
+      transformedText = this.applyFormalTransformations(sentences, tagged);
+    } else if (options.formality === "informal") {
+      transformedText = this.applyInformalTransformations(sentences, tagged);
     }
 
-    // Apply voice transformations based on formality
-    if (options.formality === 'formal') {
-      const voiceResult = this.transformToPassiveVoice(transformed);
-      transformed = voiceResult.text;
-      confidence *= voiceResult.confidence;
-    } else {
-      const voiceResult = this.transformToActiveVoice(transformed);
-      transformed = voiceResult.text;
-      confidence *= voiceResult.confidence;
+    // Only apply voice transformations if explicitly requested and confidence is high
+    if (options.contextPreservation < 0.3) {
+      // More conservative threshold
+      const passiveResult = this.transformToPassiveVoice(transformedText);
+      if (passiveResult.confidence > 0.8) {
+        // Only apply if confidence is high
+        transformedText = passiveResult.text;
+      }
     }
 
-    // Apply sentence structure transformations
-    const structureResult = this.transformSentenceStructure(
-      transformed,
-      options
-    );
-    transformed = structureResult.text;
-    confidence *= structureResult.confidence;
-
-    return {
-      original: sentence,
-      text: transformed,
-      confidence: Math.max(
-        confidence,
-        CONFIDENCE_THRESHOLDS.MIN_SENTENCE_SCORE
-      ),
-    };
+    return transformedText;
   }
 
-  private transformToPassiveVoice(text: string): {
-    text: string;
-    confidence: number;
-  } {
-    const doc = this.nlpProcessor(text);
-    let confidence = 1;
+  private calculateConfidence(tagged: string[]): number {
+    // Calculate confidence based on successful POS tagging
+    const validTags = tagged.filter((tag) => tag !== "unknown").length;
+    const confidence = validTags / tagged.length;
 
-    // Transform active voice to passive voice
-    if (doc.has('#ActiveVoice')) {
-      const terms = doc.json()[0]?.terms || [];
-      const subject =
-        terms.find((t: NlpTerm) => t.tags.includes('Subject'))?.text || '';
-      const verb =
-        terms.find((t: NlpTerm) => t.tags.includes('Verb'))?.text || '';
-      const object =
-        terms.find((t: NlpTerm) => t.tags.includes('Object'))?.text || '';
+    return Math.max(confidence, CONFIDENCE_THRESHOLDS.MIN_SYNTAX_SCORE);
+  }
+
+  private trackChanges(doc: ReturnType<typeof nlp>, tagged: string[]): TransformationChange[] {
+    const changes: TransformationChange[] = [];
+    const sentences = doc.sentences().out("array");
+
+    sentences.forEach((sentence: string, index: number) => {
+      const original = sentence;
+      const transformed = this.applySentenceTransformation(this.nlpProcessor(sentence), tagged);
+
+      if (original !== transformed) {
+        changes.push({
+          original,
+          replacement: transformed,
+          type: "syntax",
+          confidence: this.calculateSentenceConfidence(tagged, index),
+        });
+      }
+    });
+
+    return changes;
+  }
+
+  private calculateSentenceConfidence(tagged: string[], sentenceIndex: number): number {
+    const sentenceTags = tagged.slice(
+      sentenceIndex * 10, // Approximate words per sentence
+      (sentenceIndex + 1) * 10
+    );
+
+    const validTags = sentenceTags.filter((tag) => tag !== "unknown").length;
+    return Math.max(validTags / sentenceTags.length, CONFIDENCE_THRESHOLDS.MIN_SENTENCE_SCORE);
+  }
+
+  private applySentenceTransformation(sentence: ReturnType<typeof nlp>, tagged: string[]): string {
+    const terms = sentence.terms().out("array");
+    const transformedTerms = terms.map((term: string, index: number) => {
+      const tag = tagged[index];
+      return this.transformTerm(term, tag);
+    });
+
+    return transformedTerms.join(" ");
+  }
+
+  private transformTerm(term: string, tag: string): string {
+    // Apply specific transformations based on POS tag
+    switch (tag) {
+      case "VB": // Verb
+        return this.transformVerb(term);
+      case "JJ": // Adjective
+        return this.transformAdjective(term);
+      case "RB": // Adverb
+        return this.transformAdverb(term);
+      default:
+        return term;
+    }
+  }
+
+  private transformVerb(verb: string): string {
+    const irregularVerbs = new Map([
+      ["am", "are"],
+      ["is", "are"],
+      ["was", "were"],
+      ["has", "have"],
+      ["does", "do"],
+    ]);
+
+    return irregularVerbs.get(verb.toLowerCase()) || verb;
+  }
+
+  private transformAdjective(adjective: string): string {
+    const formalAdjectives = new Map([
+      ["good", "excellent"],
+      ["bad", "unfavorable"],
+      ["big", "substantial"],
+      ["small", "minimal"],
+    ]);
+
+    return formalAdjectives.get(adjective.toLowerCase()) || adjective;
+  }
+
+  private transformAdverb(adverb: string): string {
+    const formalAdverbs = new Map([
+      ["really", "significantly"],
+      ["very", "substantially"],
+      ["just", "precisely"],
+      ["maybe", "potentially"],
+    ]);
+
+    return formalAdverbs.get(adverb.toLowerCase()) || adverb;
+  }
+
+  private applyFormalTransformations(sentences: string[], tagged: string[]): string {
+    return sentences
+      .map((sentence) => {
+        const terms = this.nlpProcessor(sentence).terms().out("array");
+        return terms
+          .map((term: string, index: number) => {
+            const tag = tagged[index];
+            const formal = this.getFormalEquivalent(term, tag);
+            return formal || term;
+          })
+          .join(" ");
+      })
+      .join(". ");
+  }
+
+  private applyInformalTransformations(sentences: string[], tagged: string[]): string {
+    return sentences
+      .map((sentence) => {
+        const terms = this.nlpProcessor(sentence).terms().out("array");
+        return terms
+          .map((term: string, index: number) => {
+            const tag = tagged[index];
+            const informal = this.getInformalEquivalent(term, tag);
+            return informal || term;
+          })
+          .join(" ");
+      })
+      .join(". ");
+  }
+
+  private getFormalEquivalent(term: string, tag: string): string | null {
+    // Formal equivalents organized by POS tag
+    const formalEquivalents = new Map([
+      // Verbs (VB*)
+      ["get", { word: "obtain", tags: ["VB", "VBP", "VBZ"] }],
+      ["use", { word: "utilize", tags: ["VB", "VBP", "VBZ"] }],
+      ["show", { word: "demonstrate", tags: ["VB", "VBP", "VBZ"] }],
+      ["help", { word: "assist", tags: ["VB", "VBP", "VBZ"] }],
+
+      // Adjectives (JJ)
+      ["good", { word: "excellent", tags: ["JJ"] }],
+      ["bad", { word: "unfavorable", tags: ["JJ"] }],
+      ["big", { word: "substantial", tags: ["JJ"] }],
+      ["small", { word: "minimal", tags: ["JJ"] }],
+
+      // Adverbs (RB)
+      ["really", { word: "significantly", tags: ["RB"] }],
+      ["very", { word: "substantially", tags: ["RB"] }],
+    ]);
+
+    const equivalent = formalEquivalents.get(term.toLowerCase());
+    if (equivalent && equivalent.tags.includes(tag)) {
+      return equivalent.word;
+    }
+
+    return null;
+  }
+
+  private getInformalEquivalent(term: string, tag: string): string | null {
+    const informalEquivalents = new Map([
+      // Verbs (VB*)
+      ["obtain", { word: "get", tags: ["VB", "VBP", "VBZ"] }],
+      ["utilize", { word: "use", tags: ["VB", "VBP", "VBZ"] }],
+      ["demonstrate", { word: "show", tags: ["VB", "VBP", "VBZ"] }],
+      ["assist", { word: "help", tags: ["VB", "VBP", "VBZ"] }],
+
+      // Adjectives (JJ)
+      ["excellent", { word: "good", tags: ["JJ"] }],
+      ["substantial", { word: "big", tags: ["JJ"] }],
+
+      // Adverbs (RB)
+      ["significantly", { word: "really", tags: ["RB"] }],
+      ["substantially", { word: "very", tags: ["RB"] }],
+    ]);
+
+    const equivalent = informalEquivalents.get(term.toLowerCase());
+    if (equivalent && equivalent.tags.includes(tag)) {
+      return equivalent.word;
+    }
+
+    return null;
+  }
+
+  private transformToPassiveVoice(text: string): { text: string; confidence: number } {
+    const doc = nlp(text);
+    let confidence = 1;
+    let transformedText = text;
+
+    // Limit the number of sentences to transform
+    let transformCount = 0;
+    const maxTransforms = 2; // Only transform up to 2 sentences
+
+    doc.sentences().forEach((sentence) => {
+      if (transformCount >= maxTransforms) return;
+
+      const subject = sentence.match("#Subject").text();
+      const verb = sentence.match("#Verb").text();
+      const object = sentence.match("#Object").text();
 
       if (subject && verb && object) {
-        const passiveVerb = this.getPassiveForm(verb);
-        text = `${object} ${passiveVerb} by ${subject}`;
-        confidence *= 0.8;
+        // Only transform if all parts are present and sentence is not too complex
+        if (sentence.terms().length < 10) {
+          const baseVerb = this.nlpProcessor(verb).verbs().toInfinitive().text();
+          const pastParticiple = this.getPastParticiple(baseVerb);
+          const passiveForm = `${object} ${this.getBeForm(verb)} ${pastParticiple} by ${subject}`;
+          transformedText = transformedText.replace(sentence.text(), passiveForm);
+          confidence *= 0.9;
+          transformCount++;
+        }
       }
+    });
+
+    return { text: transformedText, confidence };
+  }
+
+  private getPastParticiple(verb: string): string {
+    const irregularParticiples = new Map([
+      ["be", "been"],
+      ["do", "done"],
+      ["go", "gone"],
+      ["see", "seen"],
+      ["take", "taken"],
+    ]);
+
+    const participle = irregularParticiples.get(verb.toLowerCase());
+    if (participle) return participle;
+
+    // Regular verb rules
+    if (verb.endsWith("e")) return verb + "d";
+    if (verb.match(/[aeiou][bcdfghjklmnpqrstvwxz]$/)) {
+      return verb + verb.slice(-1) + "ed";
     }
-
-    return { text, confidence };
+    return verb + "ed";
   }
 
-  private transformToActiveVoice(text: string): {
-    text: string;
-    confidence: number;
-  } {
-    const doc = this.nlpProcessor(text);
-    let confidence = 1;
-
-    // Transform passive voice to active voice
-    if (doc.has('#PassiveVoice')) {
-      const matches = text.match(/(.+) (?:is|are|was|were) (.+) by (.+)/i);
-      if (matches) {
-        const [, object, participle, subject] = matches;
-        const activeVerb = this.getActiveForm(participle);
-        text = `${subject} ${activeVerb} ${object}`;
-        confidence *= 0.8;
-      }
-    }
-
-    return { text, confidence };
-  }
-
-  private transformSentenceStructure(
-    text: string,
-    options: TransformationOptions
-  ): { text: string; confidence: number } {
-    const doc = this.nlpProcessor(text);
-    let confidence = 1;
-
-    // Apply different sentence structures based on formality and creativity
-    if (options.formality === 'formal' && options.creativity > 0.7) {
-      const { text: transformedText, confidence: structureConfidence } =
-        this.applyComplexStructure(doc);
-      text = transformedText;
-      confidence *= structureConfidence;
-    } else if (options.formality === 'informal' && options.creativity < 0.3) {
-      const { text: transformedText, confidence: structureConfidence } =
-        this.applySimpleStructure(doc);
-      text = transformedText;
-      confidence *= structureConfidence;
-    }
-
-    return {
-      text,
-      confidence: Math.max(
-        confidence,
-        CONFIDENCE_THRESHOLDS.MIN_SENTENCE_SCORE
-      ),
-    };
-  }
-
-  private getPassiveForm(verb: string): string {
-    const irregularVerbs: Record<string, string> = {
-      take: 'taken',
-      give: 'given',
-      write: 'written',
-      break: 'broken',
-      // Add more irregular verbs as needed
-    };
-
-    if (irregularVerbs[verb]) {
-      return `is ${irregularVerbs[verb]}`;
-    }
-
-    // Regular verbs
-    return `is ${verb}ed`;
-  }
-
-  private getActiveForm(participle: string): string {
-    const irregularForms: Record<string, string> = {
-      taken: 'takes',
-      given: 'gives',
-      written: 'writes',
-      broken: 'breaks',
-      // Add more irregular forms as needed
-    };
-
-    return irregularForms[participle] || participle.replace(/ed$/, 's');
-  }
-
-  private applyComplexStructure(doc: ReturnType<typeof nlp>): {
-    text: string;
-    confidence: number;
-  } {
-    // Implement complex sentence structure transformations
-    // This is a placeholder implementation
-    return { text: doc.text(), confidence: 0.7 };
-  }
-
-  private applySimpleStructure(doc: ReturnType<typeof nlp>): {
-    text: string;
-    confidence: number;
-  } {
-    // Implement simple sentence structure transformations
-    // This is a placeholder implementation
-    return { text: doc.text(), confidence: 0.9 };
-  }
-
-  private splitIntoSentences(text: string): string[] {
-    return text.match(/[^.!?]+[.!?]+/g) || [text];
-  }
-
-  private formalizeText(text: string): string {
-    return text
-      .replace(/don't/g, 'do not')
-      .replace(/can't/g, 'cannot')
-      .replace(/won't/g, 'will not')
-      .replace(/n't/g, ' not')
-      .replace(/['']re/g, ' are')
-      .replace(/['']ve/g, ' have')
-      .replace(/['']ll/g, ' will')
-      .replace(/['']m/g, ' am')
-      .replace(/gonna/g, 'going to')
-      .replace(/wanna/g, 'want to')
-      .replace(/gotta/g, 'got to')
-      .replace(/dunno/g, 'do not know')
-      .replace(/y'all/g, 'you all');
-  }
-
-  private casualizeText(text: string): string {
-    return text
-      .replace(
-        /\b(do|does|did|have|has|had|would|will|is|are|am) not\b/g,
-        "$1n't"
-      )
-      .replace(/\b(I am)\b/g, "I'm")
-      .replace(/\b(you|we|they) are\b/g, "$1're")
-      .replace(/\b(I|you|we|they) have\b/g, "$1've")
-      .replace(/\b(I|you|we|they) will\b/g, "$1'll")
-      .replace(/going to\b/g, 'gonna')
-      .replace(/want to\b/g, 'wanna')
-      .replace(/got to\b/g, 'gotta')
-      .replace(/do not know\b/g, 'dunno')
-      .replace(/you all\b/g, "y'all");
+  private getBeForm(verb: string): string {
+    const doc = this.nlpProcessor(verb);
+    if (doc.has("#PastTense")) return "was";
+    if (doc.has("#PresentTense")) return "is";
+    if (doc.has("#FutureTense")) return "will be";
+    return "is";
   }
 }

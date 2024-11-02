@@ -9,104 +9,104 @@ export interface EmotionalWord {
 export const emotionalWordDictionary: Record<string, EmotionalWord> = {
   // Positive - Professional
   accomplish: {
-    word: 'accomplish',
-    tone: 'positive',
+    word: "accomplish",
+    tone: "positive",
     intensity: 0.7,
     formality: 0.8,
-    tags: ['achievement', 'professional']
+    tags: ["achievement", "professional"],
   },
   achieve: {
-    word: 'achieve',
-    tone: 'positive',
+    word: "achieve",
+    tone: "positive",
     intensity: 0.7,
     formality: 0.8,
-    tags: ['achievement', 'professional']
+    tags: ["achievement", "professional"],
   },
   optimize: {
-    word: 'optimize',
-    tone: 'positive',
+    word: "optimize",
+    tone: "positive",
     intensity: 0.6,
     formality: 0.9,
-    tags: ['improvement', 'professional', 'technical']
+    tags: ["improvement", "professional", "technical"],
   },
 
   // Positive - Casual
   awesome: {
-    word: 'awesome',
-    tone: 'positive',
+    word: "awesome",
+    tone: "positive",
     intensity: 0.8,
     formality: 0.3,
-    tags: ['enthusiasm', 'casual']
+    tags: ["enthusiasm", "casual"],
   },
   great: {
-    word: 'great',
-    tone: 'positive',
+    word: "great",
+    tone: "positive",
     intensity: 0.7,
     formality: 0.5,
-    tags: ['approval', 'casual']
+    tags: ["approval", "casual"],
   },
 
   // Negative - Professional
   challenge: {
-    word: 'challenge',
-    tone: 'negative',
+    word: "challenge",
+    tone: "negative",
     intensity: 0.5,
     formality: 0.8,
-    tags: ['difficulty', 'professional']
+    tags: ["difficulty", "professional"],
   },
   concern: {
-    word: 'concern',
-    tone: 'negative',
+    word: "concern",
+    tone: "negative",
     intensity: 0.4,
     formality: 0.8,
-    tags: ['worry', 'professional']
+    tags: ["worry", "professional"],
   },
 
   // Negative - Casual
   bad: {
-    word: 'bad',
-    tone: 'negative',
+    word: "bad",
+    tone: "negative",
     intensity: 0.6,
     formality: 0.4,
-    tags: ['disapproval', 'casual']
+    tags: ["disapproval", "casual"],
   },
   awful: {
-    word: 'awful',
-    tone: 'negative',
+    word: "awful",
+    tone: "negative",
     intensity: 0.8,
     formality: 0.3,
-    tags: ['disapproval', 'casual']
+    tags: ["disapproval", "casual"],
   },
 
   // Neutral - Professional
   implement: {
-    word: 'implement',
-    tone: 'neutral',
+    word: "implement",
+    tone: "neutral",
     intensity: 0,
     formality: 0.9,
-    tags: ['action', 'professional', 'technical']
+    tags: ["action", "professional", "technical"],
   },
   utilize: {
-    word: 'utilize',
-    tone: 'neutral',
+    word: "utilize",
+    tone: "neutral",
     intensity: 0,
     formality: 0.9,
-    tags: ['action', 'professional']
+    tags: ["action", "professional"],
   },
 
   // Neutral - Casual
   use: {
-    word: 'use',
-    tone: 'neutral',
+    word: "use",
+    tone: "neutral",
     intensity: 0,
     formality: 0.4,
-    tags: ['action', 'casual']
+    tags: ["action", "casual"],
   },
   get: {
-    word: 'get',
-    tone: 'neutral',
+    word: "get",
+    tone: "neutral",
     intensity: 0,
     formality: 0.3,
-    tags: ['action', 'casual']
-  }
-}; 
+    tags: ["action", "casual"],
+  },
+};

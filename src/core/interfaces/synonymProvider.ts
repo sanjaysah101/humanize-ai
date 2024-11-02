@@ -1,7 +1,8 @@
 export interface SynonymResult {
   word: string;
   score: number;
-  tags: string[];
+  tags?: string[];
+  contextPreservationScore?: number;
 }
 
 export interface ISynonymProvider {

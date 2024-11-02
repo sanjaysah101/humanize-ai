@@ -1,0 +1,12 @@
+{
+  "singleQuote": false,
+  "arrowParens": "always",
+  "printWidth": 120,
+  "semi": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "importOrder": ["^(react|next?/?([a-zA-Z/]*))$", "<THIRD_PARTY_MODULES>", "^@/(.*)$", "^[./]"],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"]
+}

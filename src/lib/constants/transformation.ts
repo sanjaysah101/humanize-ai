@@ -1,9 +1,9 @@
 export const CONFIDENCE_THRESHOLDS = {
-  MIN_WORD_SCORE: 0.6,
-  MIN_SYNTAX_SCORE: 0.7,
-  MIN_EMOTIONAL_SCORE: 0.6,
-  MIN_CONFIDENCE: 0.5,
-  MIN_SENTENCE_SCORE: 0.5
+  MIN_WORD_SCORE: 0.7,
+  MIN_SYNTAX_SCORE: 0.8,
+  MIN_EMOTIONAL_SCORE: 0.7,
+  MIN_CONFIDENCE: 0.6,
+  MIN_SENTENCE_SCORE: 0.7,
 } as const;
 
 export const CACHE_TTL = {
@@ -17,6 +17,6 @@ export const RATE_LIMITS = {
 };
 
 export const API_ENDPOINTS = {
-  DATAMUSE: 'https://api.datamuse.com',
-  WORDS_API: 'https://wordsapiv1.p.rapidapi.com',
-}; 
+  DATAMUSE: "https://api.datamuse.com",
+  WORDS_API: "https://wordsapiv1.p.rapidapi.com",
+};

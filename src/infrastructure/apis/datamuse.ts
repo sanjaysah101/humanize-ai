@@ -1,10 +1,10 @@
-import { ISynonymProvider } from '@/core/interfaces/synonymProvider';
-import { SynonymResult } from '@/core/interfaces/synonymProvider';
-import { ICache } from '@/core/interfaces/cache';
-import { CONFIDENCE_THRESHOLDS } from '@/lib/constants/transformation';
+import { ICache } from "@/core/interfaces/cache";
+import { ISynonymProvider } from "@/core/interfaces/synonymProvider";
+import { SynonymResult } from "@/core/interfaces/synonymProvider";
+import { CONFIDENCE_THRESHOLDS } from "@/lib/constants/transformation";
 
 export class DatamuseSynonymProvider implements ISynonymProvider {
-  private baseUrl = 'https://api.datamuse.com/words';
+  private baseUrl = "https://api.datamuse.com/words";
   private cache: ICache;
 
   constructor(cache: ICache) {
@@ -19,10 +19,9 @@ export class DatamuseSynonymProvider implements ISynonymProvider {
         return JSON.parse(cached) as SynonymResult[];
       }
 
+      const url = `${this.baseUrl}?rel_syn=${encodeURIComponent(word)}&md=p`;
       // Fetch from API if not cached
-      const response = await fetch(
-        `${this.baseUrl}?rel_syn=${encodeURIComponent(word)}&md=p`
-      );
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`Datamuse API error: ${response.statusText}`);
@@ -39,8 +38,7 @@ export class DatamuseSynonymProvider implements ISynonymProvider {
       );
 
       return synonyms;
-    } catch (error) {
-      console.error('Error fetching synonyms:', error);
+    } catch {
       return [];
     }
   }
@@ -50,16 +48,13 @@ export class DatamuseSynonymProvider implements ISynonymProvider {
     originalWord: string
   ): SynonymResult[] {
     return data
-      .filter(item => 
-        item.word !== originalWord && 
-        this.isValidSynonym(item.word)
-      )
-      .map(item => ({
+      .filter((item) => item.word !== originalWord && this.isValidSynonym(item.word))
+      .map((item) => ({
         word: item.word,
         score: this.normalizeScore(item.score),
-        tags: this.processTags(item.tags || [])
+        tags: this.processTags(item.tags || []),
       }))
-      .filter(syn => syn.score >= CONFIDENCE_THRESHOLDS.MIN_WORD_SCORE);
+      .filter((syn) => syn.score >= CONFIDENCE_THRESHOLDS.MIN_WORD_SCORE);
   }
 
   private normalizeScore(score: number): number {
@@ -70,24 +65,22 @@ export class DatamuseSynonymProvider implements ISynonymProvider {
 
   private processTags(tags: string[]): string[] {
     const tagMap: Record<string, string> = {
-      'n': 'Noun',
-      'v': 'Verb',
-      'adj': 'Adjective',
-      'adv': 'Adverb',
-      'prep': 'Preposition'
+      n: "Noun",
+      v: "Verb",
+      adj: "Adjective",
+      adv: "Adverb",
+      prep: "Preposition",
     };
 
-    return tags
-      .map(tag => tagMap[tag] || tag)
-      .filter(tag => tag in tagMap);
+    return tags.map((tag) => tagMap[tag] || tag).filter((tag) => tag in tagMap);
   }
 
   private isValidSynonym(word: string): boolean {
     return (
       word.length > 1 &&
       !/[^a-zA-Z\-']/.test(word) && // Only letters, hyphens, and apostrophes
-      !word.startsWith('-') &&
-      !word.endsWith('-')
+      !word.startsWith("-") &&
+      !word.endsWith("-")
     );
   }
 }

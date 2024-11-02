@@ -1,12 +1,7 @@
-export type EmotionalTone =
-  | 'neutral'
-  | 'positive'
-  | 'negative'
-  | 'professional'
-  | 'casual';
+export type EmotionalTone = "neutral" | "positive" | "negative" | "professional" | "casual";
 
 export interface TransformationOptions {
-  formality: 'informal' | 'formal';
+  formality: "informal" | "formal";
   creativity: number;
   preserveIntent: boolean;
   emotionalTone: EmotionalTone;
@@ -24,7 +19,7 @@ export interface TransformationResult {
 export interface TransformationChange {
   original: string;
   replacement: string;
-  type: 'word' | 'syntax' | 'emotional';
+  type: "word" | "syntax" | "emotional";
   confidence: number;
 }
 
@@ -37,6 +32,6 @@ export interface TransformationResponse {
 export interface TransformationListItem {
   original: string;
   replacement: string;
-  type: 'word' | 'syntax' | 'emotional';
+  type: "word" | "syntax" | "emotional";
   confidence: number;
 }

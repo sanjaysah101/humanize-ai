@@ -1,5 +1,6 @@
-import nlp from 'compromise';
-import { CONFIDENCE_THRESHOLDS } from '@/lib/constants/transformation';
+import nlp from "compromise";
+
+import { CONFIDENCE_THRESHOLDS } from "@/lib/constants/transformation";
 
 export class PatternDetector {
   private nlpProcessor: typeof nlp;
@@ -26,18 +27,14 @@ export class PatternDetector {
       wordFrequency[word] = (wordFrequency[word] || 0) + 1;
     });
 
-    const repetitionScore =
-      1 -
-      Object.values(wordFrequency).filter((f) => f > 2).length / words.length;
+    const repetitionScore = 1 - Object.values(wordFrequency).filter((f) => f > 2).length / words.length;
     return Math.max(CONFIDENCE_THRESHOLDS.MIN_WORD_SCORE, repetitionScore);
   }
 
   private detectStructuralPatterns(text: string): number {
     const doc = this.nlpProcessor(text);
-    const sentences = doc.sentences().out('array');
-    const structures = sentences.map((s: string) =>
-      this.getSentenceStructure(s)
-    );
+    const sentences = doc.sentences().out("array");
+    const structures = sentences.map((s: string) => this.getSentenceStructure(s));
 
     const uniqueStructures = new Set(structures).size;
     return Math.min(1, uniqueStructures / sentences.length);
@@ -45,7 +42,7 @@ export class PatternDetector {
 
   private detectTransitionPatterns(text: string): number {
     const doc = this.nlpProcessor(text);
-    const sentences = doc.sentences().out('array');
+    const sentences = doc.sentences().out("array");
     const transitions = this.findTransitionWords(sentences);
 
     return Math.min(1, transitions / sentences.length);
@@ -53,23 +50,21 @@ export class PatternDetector {
 
   private getSentenceStructure(sentence: string): string {
     const doc = this.nlpProcessor(sentence);
-    return doc.terms().out('tags').join('-');
+    return doc.terms().out("tags").join("-");
   }
 
   private findTransitionWords(sentences: string[]): number {
     const transitionWords = new Set([
-      'however',
-      'therefore',
-      'furthermore',
-      'moreover',
-      'consequently',
-      'meanwhile',
-      'nevertheless',
-      'alternatively',
+      "however",
+      "therefore",
+      "furthermore",
+      "moreover",
+      "consequently",
+      "meanwhile",
+      "nevertheless",
+      "alternatively",
     ]);
 
-    return sentences.filter((s) =>
-      s.split(/\s+/).some((word) => transitionWords.has(word.toLowerCase()))
-    ).length;
+    return sentences.filter((s) => s.split(/\s+/).some((word) => transitionWords.has(word.toLowerCase()))).length;
   }
 }

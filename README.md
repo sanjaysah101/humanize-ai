@@ -8,9 +8,9 @@ Create solutions that make AI-generated text indistinguishable from human-author
 
 - Custom AI models/tools
 - Third-party APIs
-— Functional programming techniques
-— Mathematical concepts (lambda calculus, type theory)
-— Novel AI techniques (transformers, RL, meta-learning)
+  — Functional programming techniques
+  — Mathematical concepts (lambda calculus, type theory)
+  — Novel AI techniques (transformers, RL, meta-learning)
 
 ## Key Requirements
 

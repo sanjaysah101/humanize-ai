@@ -5,3 +5,10 @@ export interface WordContext {
   pos: string;
   isImportantTerm: boolean;
 }
+
+export interface WordTransformation {
+  word: string;
+  synonyms: string[];
+  score: number;
+  pos?: string; // Part of speech
+}
