@@ -1,57 +1,47 @@
-# AI Text Humanization Hackathon: Quick Guide
+# AI Text Humanization
 
-## Challenge
+A sophisticated system for transforming AI-generated text into natural, human-like content using advanced NLP techniques and mathematical models.
 
-Create solutions that make AI-generated text indistinguishable from human-authored content.
+## Core Features
 
-## Technical Approaches
+- Advanced text transformation pipeline with emotional intelligence
+- Dynamic tone adjustments (neutral, positive, negative, professional, casual)
+- Formal/informal style adaptation with context preservation
+- Natural language pattern preservation using Markov chains
+- Real-time authenticity verification with confidence scoring
+- Memory-efficient caching system
 
-- Custom AI models/tools
-- Third-party APIs
-  — Functional programming techniques
-  — Mathematical concepts (lambda calculus, type theory)
-  — Novel AI techniques (transformers, RL, meta-learning)
+## Technical Stack
 
-## Key Requirements
+### Frontend
 
-- Working prototype with exposed URL (VM available on request)
-- Detailed technical report
-- Use only open-source/public datasets
-- Pass authenticity checks
-- Maintain readability and natural flow
+- **Framework**: Next.js 15.0.2
+- **UI**: React 19.0.0-rc, TailwindCSS 3.4
+- **Components**: Radix UI primitives
+- **Analytics**: Vercel Analytics
 
-## Evaluation Criteria
+### NLP & Text Processing
 
-### Human-Likeness (40%)
+- **Core**: Compromise 14.14.2
+- **Extensions**:
+  - compromise-numbers
+  - compromise-sentences
+  - Natural 8.0.1
+  - String-similarity 4.0.4
 
-- Authenticity check pass rate
-- Natural language patterns
-- Stylistic diversity
-- Emotional intelligence
+### AI/ML
 
-### Technical Complexity (40%)
+- **Models**: HuggingFace Inference API 2.8.1
+- **Processing**: Custom transformer models
+- **Verification**: Authenticity scoring system
 
-- Algorithmic sophistication
-- Mathematical rigor
-- Novel techniques
+### Architecture
 
-### Cost-Effectiveness (20%)
+- **Pattern**: Clean Architecture
+- **State Management**: Functional programming (fp-ts 2.16.9)
+- **Utilities**:
+  - Monet.js 0.9.3
+  - Ramda 0.30.1
+  - Mathjs 13.2.0
 
-- Resource efficiency
-- Scalability
-- Adaptability
-
-## Quick Tips
-
-- Focus on passing AI detection tools
-- Balance complexity with resource efficiency
-- Document your approach thoroughly
-- Test with diverse text styles
-- Consider ethical guidelines
-
-### TODO - Advanced Techniques
-
-- Advanced AI/ML integration
-- Mathematical foundations
-- Stronger authenticity verification
-- Documentation and technical reporting
+## Quick Start

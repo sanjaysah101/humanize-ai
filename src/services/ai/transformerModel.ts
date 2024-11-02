@@ -1,3 +1,4 @@
+import { GenerativeModel, GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { HfInference } from "@huggingface/inference";
 import * as O from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
@@ -6,16 +7,26 @@ import { EmotionalTone, TransformationOptions } from "@/core/entities/transforma
 import { TransformationModels } from "@/lib/math/transformationModels";
 
 export class TransformerModel {
-  private inference: HfInference;
-  private modelId: string = "gpt2";
+  private genAI: GoogleGenerativeAI;
+  private geminiModel: GenerativeModel;
+  private huggingface: HfInference;
+  private fallbackModelId: string = "meta-llama/Llama-2-70b-chat-hf";
   private maxRetries = 3;
   private baseDelay = 2000;
 
   constructor() {
-    if (!process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY) {
+    // Initialize Google Gemini client
+    if (!process.env.GOOGLE_API_KEY) {
+      throw new Error("GOOGLE_API_KEY is not set");
+    }
+    this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    this.geminiModel = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // Initialize HuggingFace client for fallback
+    if (!process.env.HUGGINGFACE_API_KEY) {
       throw new Error("HUGGINGFACE_API_KEY is not set");
     }
-    this.inference = new HfInference(process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY);
+    this.huggingface = new HfInference(process.env.HUGGINGFACE_API_KEY);
   }
 
   async generateHumanLikeText(input: string, options: TransformationOptions): Promise<string> {
@@ -28,40 +39,44 @@ export class TransformerModel {
         O.map((t) => (options.formality === "formal" ? this.formalizeText(t) : t)),
         O.map((t) => (options.emotionalTone !== "neutral" ? this.adjustTone(t, options.emotionalTone) : t)),
         O.map((t) => (options.creativity > 0.7 ? this.addCreativeVariations(t) : t)),
-        O.map((t) => (options.preserveIntent ? this.ensureIntentPreservation(t, text) : t)),
+        O.map((t) => (options.preserveIntent ? this.ensureIntentPreservation(t, input) : t)),
         O.map((t) => this.postprocessText(t, input)),
         O.getOrElse(() => text)
       );
 
     while (attempt < this.maxRetries) {
       try {
-        const response = await this.inference.textGeneration({
-          model: this.modelId,
-          inputs: input,
-          parameters: {
-            max_length: 150,
-            temperature: Math.min(options.creativity, 0.8),
-            top_p: 0.9,
-            repetition_penalty: 1.2,
-          },
-        });
+        // Try Gemini Pro first
+        const geminiResponse = await this.generateWithGemini(input, options);
+        if (geminiResponse) {
+          const similarity = this.calculateTextSimilarity(input, geminiResponse);
 
-        const generatedText = response.generated_text;
-        const similarity = this.calculateTextSimilarity(input, generatedText);
+          // If similarity is too low, try to repair the text or retry
+          if (similarity < 0.2) {
+            const repairedText = this.repairGeneratedText(input, geminiResponse);
+            const repairedSimilarity = this.calculateTextSimilarity(input, repairedText);
 
-        if (similarity < 0.2) {
-          const repairedText = this.repairGeneratedText(input, generatedText);
-          const repairedSimilarity = this.calculateTextSimilarity(input, repairedText);
+            if (repairedSimilarity >= 0.2) {
+              return processText(repairedText);
+            }
 
-          if (repairedSimilarity >= 0.2) {
-            return processText(repairedText);
+            attempt++;
+            continue;
           }
 
-          attempt++;
-          continue;
+          return processText(geminiResponse);
         }
 
-        return processText(generatedText);
+        // Fallback to Llama 2
+        const llamaResponse = await this.generateWithLlama(input, options);
+        const llamaSimilarity = this.calculateTextSimilarity(input, llamaResponse);
+
+        if (llamaSimilarity < 0.2) {
+          const repairedText = this.repairGeneratedText(input, llamaResponse);
+          return processText(repairedText);
+        }
+
+        return processText(llamaResponse);
       } catch (error) {
         attempt++;
         if (error instanceof Error && error.message.includes("Rate limit")) {
@@ -69,11 +84,79 @@ export class TransformerModel {
           delay *= 2;
           continue;
         }
-        return processText(input);
+        throw error;
       }
     }
 
     return processText(input);
+  }
+
+  private async generateWithGemini(input: string, options: TransformationOptions): Promise<string | null> {
+    try {
+      // Construct the prompt with specific instructions based on options
+      const prompt = this.constructGeminiPrompt(input, options);
+
+      // Generate content with Gemini
+      const result = await this.geminiModel.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: Math.min(options.creativity, 0.9),
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 2048,
+        },
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+        ],
+      });
+
+      const { response } = result;
+      return response.text();
+    } catch {
+      return null;
+    }
+  }
+
+  private constructGeminiPrompt(input: string, options: TransformationOptions): string {
+    let prompt = `Transform this text to be more human-like while preserving its meaning: "${input}"\n\n`;
+
+    // Add specific instructions based on options
+    prompt += "Requirements:\n";
+    prompt += `- Use ${options.formality} language\n`;
+    prompt += `- Maintain a ${options.emotionalTone} emotional tone\n`;
+    prompt += `- ${options.preserveIntent ? "Preserve the intent of the original text" : "Do not change the intent of the original text"}`;
+
+    return prompt;
+  }
+
+  private async generateWithLlama(input: string, options: TransformationOptions): Promise<string> {
+    const response = await this.huggingface.textGeneration({
+      model: this.fallbackModelId,
+      inputs: input,
+      parameters: {
+        max_length: 2000,
+        temperature: Math.min(options.creativity, 0.8),
+        top_p: 0.95,
+        repetition_penalty: 1.2,
+      },
+    });
+
+    return response.generated_text;
   }
 
   private calculateTextSimilarity(text1: string, text2: string): number {
