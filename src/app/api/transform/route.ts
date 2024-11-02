@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
 
     const result = await transformText(text, options as TransformationOptions);
     return NextResponse.json(result);
-    
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
@@ -32,4 +31,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

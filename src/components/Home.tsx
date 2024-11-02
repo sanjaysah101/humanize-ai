@@ -2,31 +2,51 @@
 
 import { useState, useTransition } from 'react';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+  Button,
+} from '@/components/ui';
+import {
   TransformationOptions,
   TransformationResponse,
-  TransformationListItem,
+  EmotionalTone,
 } from '@/core/entities/transformation';
-import { transformText } from '@/app/actions/transform';
 
-const defaultOptions: TransformationOptions = {
-  formality: 'formal',
-  creativity: 0.7,
-  preserveIntent: true,
-  emotionalTone: 'neutral',
-  varietyLevel: 0.5,
-  contextPreservation: 0.8,
-};
+const emotionalTones: EmotionalTone[] = [
+  'neutral',
+  'positive',
+  'negative',
+  'professional',
+  'casual',
+];
 
 export const Home = () => {
   const [text, setText] = useState('');
+  const [options, setOptions] = useState<TransformationOptions>({
+    formality: 'formal',
+    creativity: 0.7,
+    preserveIntent: true,
+    emotionalTone: 'neutral',
+    varietyLevel: 0.5,
+    contextPreservation: 0.8,
+  });
   const [result, setResult] = useState<TransformationResponse | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleTransform = () => {
     startTransition(async () => {
       try {
-        const response = await transformText(text, defaultOptions);
-        setResult(response);
+        const response = await fetch('/api/transform', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, options }),
+        });
+        const data = await response.json();
+        setResult(data);
       } catch (error) {
         console.error('Error:', error);
         setResult({
@@ -38,68 +58,103 @@ export const Home = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Text Transformation Test</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">
+          AI Text Humanizer
+        </h1>
+        <p className="text-gray-600 mb-8">Transform AI-generated text into natural, human-like content</p>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block mb-2" htmlFor="inputText">
-            Input Text:
-          </label>
-          <textarea
-            id="inputText"
-            className="w-full p-2 border rounded-md"
-            rows={4}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter text to transform..."
-          />
-        </div>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Enter AI-generated text to humanize..."
+              className="min-h-[200px] text-base"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+          </div>
 
-        <button
-          type="button"
-          onClick={handleTransform}
-          disabled={isPending || !text}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
-        >
-          {isPending ? 'Transforming...' : 'Transform Text'}
-        </button>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Emotional Tone</label>
+              <Select
+                value={options.emotionalTone}
+                onValueChange={(value: EmotionalTone) =>
+                  setOptions({ ...options, emotionalTone: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {emotionalTones.map((tone) => (
+                    <SelectItem key={tone} value={tone}>
+                      {tone.charAt(0).toUpperCase() + tone.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        {result && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Result:</h2>
-            <div className="bg-gray-50 p-4 rounded-md">
-              {result.success && result.data && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Formality</label>
+              <Select
+                value={options.formality}
+                onValueChange={(value: 'formal' | 'informal') =>
+                  setOptions({ ...options, formality: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="formal">Formal</SelectItem>
+                  <SelectItem value="informal">Informal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleTransform}
+            disabled={isPending || !text}
+            className="w-full"
+          >
+            {isPending ? 'Transforming...' : 'Humanize Text'}
+          </Button>
+
+          {result && (
+            <div className="rounded-lg border bg-card p-6">
+              <h2 className="text-xl font-semibold mb-4">Result</h2>
+              {result.success && result.data ? (
                 <>
-                  <div className="mb-4">
-                    <h3 className="font-medium">Transformed Text:</h3>
-                    <p className="mt-1">{result.data.transformedText}</p>
+                  <div className="prose max-w-none">
+                    <p>{result.data.transformedText}</p>
                   </div>
-
                   {result.data.transformations.length > 0 && (
-                    <div>
-                      <h3 className="font-medium">Transformations:</h3>
-                      <ul className="mt-1 space-y-1">
-                        {result.data.transformations.map(
-                          (t: TransformationListItem, i: number) => (
-                            <li key={`transform-${i}`} className="text-sm">
-                              {t.original} → {t.replacement} ({t.type},
-                              confidence: {t.confidence.toFixed(2)})
-                            </li>
-                          )
-                        )}
+                    <div className="mt-4">
+                      <h3 className="font-medium mb-2">Transformations Applied:</h3>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        {result.data.transformations.map((t, i) => (
+                          <li key={i}>
+                            <span className="font-mono">{t.original}</span> →{' '}
+                            <span className="font-mono">{t.replacement}</span>{' '}
+                            <span className="text-gray-500">
+                              ({t.type}, {(t.confidence * 100).toFixed(0)}%)
+                            </span>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   )}
                 </>
-              )}
-
-              {!result.success && result.error && (
-                <div className="text-red-500">Error: {result.error}</div>
+              ) : (
+                <div className="text-red-500">{result.error}</div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
