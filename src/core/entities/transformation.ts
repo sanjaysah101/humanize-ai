@@ -1,8 +1,8 @@
 export type EmotionalTone = "neutral" | "positive" | "negative" | "professional" | "casual";
 
 export interface TransformationOptions {
-  formality: "informal" | "formal";
   creativity: number;
+  formality: "informal" | "formal";
   preserveIntent: boolean;
   emotionalTone: EmotionalTone;
   varietyLevel: number;

@@ -20,7 +20,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TransformationResult | null>(null);
   const [options, setOptions] = useState<TransformationOptions>({
-    formality: "informal",
+    formality: "formal",
     emotionalTone: "neutral",
     creativity: 0.5,
     preserveIntent: true,
@@ -63,23 +63,29 @@ export default function Home() {
     try {
       const response = await transformText(text, options);
       if (response.success && response.data) {
-        setResult(response.data);
-        if (response.data.confidence < 0.5) {
-          toast({
-            title: "Low Confidence",
-            description: "The transformation may not maintain the original meaning well",
-            variant: "default",
-          });
+        // Only accept result if we have meaningful transformations
+        if (response.data.transformations.length > 0) {
+          setResult(response.data);
+          if (response.data.confidence < 0.5) {
+            toast({
+              title: "Low Confidence",
+              description: "Some transformations may not preserve the original meaning",
+              variant: "default",
+            });
+          }
+        } else {
+          throw new Error("No meaningful transformations found");
         }
       } else {
         throw new Error(response.error || "Failed to transform text");
       }
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Transformation Error",
         description: error instanceof Error ? error.message : "Failed to transform text",
         variant: "destructive",
       });
+      setResult(null);
     } finally {
       setLoading(false);
     }

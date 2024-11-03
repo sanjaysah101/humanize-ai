@@ -41,10 +41,12 @@ export class TextTransformer implements ITransformer {
         (change) => change.confidence > CONFIDENCE_THRESHOLDS.MIN_WORD_SCORE
       );
 
-      // Apply filtered word changes
+      // Apply filtered word changes sequentially
       let intermediateText = text;
       for (const change of validWordChanges) {
-        intermediateText = intermediateText.replace(new RegExp(`\\b${change.original}\\b`, "g"), change.replacement);
+        // Use word boundaries in regex to prevent partial word replacements
+        const regex = new RegExp(`\\b${this.escapeRegExp(change.original)}\\b`, "g");
+        intermediateText = intermediateText.replace(regex, change.replacement);
       }
 
       // Apply Markov transformations for more natural flow when creativity is high
@@ -290,5 +292,9 @@ export class TextTransformer implements ITransformer {
     });
 
     return markovMap;
+  }
+
+  private escapeRegExp(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }

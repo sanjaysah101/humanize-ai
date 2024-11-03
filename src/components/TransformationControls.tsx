@@ -89,8 +89,8 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
           </div>
           <Select
             value={options.formality}
-            onValueChange={(value: "formal" | "informal") => onChange({ ...options, formality: value })}
             disabled={disabled}
+            onValueChange={(value: "formal" | "informal") => onChange({ ...options, formality: value })}
           >
             <SelectTrigger className="w-[120px]">
               <SelectValue />
