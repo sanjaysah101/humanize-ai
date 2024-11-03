@@ -9,7 +9,7 @@ interface TransformationResultProps {
 }
 
 export const TransformationResultView = ({ result }: TransformationResultProps) => {
-  const confidencePercentage = Math.round(result.confidence * 10000);
+  const confidencePercentage = Math.round(result.confidence * 100);
 
   const getTypeColor = (type: "word" | "syntax" | "emotional") => {
     switch (type) {

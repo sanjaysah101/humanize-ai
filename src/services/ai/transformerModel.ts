@@ -38,7 +38,7 @@ export class TransformerModel {
         O.some(text.trim()),
         O.map((t) => (options.formality === "formal" ? this.formalizeText(t) : t)),
         O.map((t) => (options.emotionalTone !== "neutral" ? this.adjustTone(t, options.emotionalTone) : t)),
-        O.map((t) => (options.creativity > 0.7 ? this.addCreativeVariations(t) : t)),
+        O.map((t) => (options.creativity > 0.7 ? this.addCreativeVariations(t, options.creativity) : t)),
         O.map((t) => (options.preserveIntent ? this.ensureIntentPreservation(t, input) : t)),
         O.map((t) => this.postprocessText(t, input)),
         O.getOrElse(() => text)
@@ -238,13 +238,12 @@ export class TransformerModel {
     return modifiedText;
   }
 
-  private addCreativeVariations(text: string): string {
-    // Add creative variations while maintaining readability
+  private addCreativeVariations(text: string, creativityLevel: number): string {
     const sentences = text.split(/[.!?]+/).filter(Boolean);
     return sentences
       .map((sentence) => {
-        if (Math.random() > 0.7) {
-          // Add descriptive elements
+        // Adjust probability based on creativity level
+        if (Math.random() < creativityLevel) {
           return this.addDescriptiveElements(sentence);
         }
         return sentence;
@@ -253,7 +252,16 @@ export class TransformerModel {
   }
 
   private addDescriptiveElements(sentence: string): string {
-    const descriptiveElements = ["Interestingly,", "Notably,", "Remarkably,", "Significantly,", "Essentially,"];
+    const descriptiveElements = [
+      "Interestingly,",
+      "Notably,",
+      "Remarkably,",
+      "Significantly,",
+      "Essentially,",
+      "In particular,",
+      "Specifically,",
+      "Importantly,",
+    ];
     const randomElement = descriptiveElements[Math.floor(Math.random() * descriptiveElements.length)];
     return `${randomElement} ${sentence}`;
   }

@@ -46,6 +46,7 @@ export class SynonymSelector {
     // Apply variety based on previously used synonyms
     const varietyAdjusted = synonyms.map((synonym) => ({
       ...synonym,
+      contextScore: this.adjustScoreForVariety(synonym, varietyLevel),
     }));
 
     // Sort by adjusted scores
