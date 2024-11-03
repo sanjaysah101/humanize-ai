@@ -9,8 +9,10 @@ import { TransformationResultView } from "@/components/TransformationResult";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { ValidationMessage } from "@/components/ui/validation-message";
 import { TransformationOptions, TransformationResult } from "@/core/entities/transformation";
 import { useToast } from "@/hooks/use-toast";
+import { validateTransformText } from "@/utils/validation";
 
 export default function Home() {
   const { toast } = useToast();
@@ -25,17 +27,38 @@ export default function Home() {
     varietyLevel: 0.5,
     contextPreservation: 0.8,
   });
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setText(newText);
+
+    if (newText.trim()) {
+      const validation = validateTransformText(newText);
+      if (!validation.isValid) {
+        setValidationError(validation.error || "");
+      } else {
+        setValidationError(null);
+      }
+    } else {
+      setValidationError(null);
+    }
+  };
 
   const handleTransform = async () => {
-    if (!text.trim()) {
+    const validation = validateTransformText(text);
+
+    if (!validation.isValid) {
+      setValidationError(validation.error || "");
       toast({
-        title: "Error",
-        description: "Please enter some text to transform",
+        title: "Validation Error",
+        description: validation.error,
         variant: "destructive",
       });
       return;
     }
 
+    setValidationError(null);
     setLoading(true);
     try {
       const response = await transformText(text, options);
@@ -70,19 +93,27 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Input Section */}
           <section className="space-y-6">
-            <Card className="overflow-hidden border-2">
-              <Textarea
-                placeholder="Enter text to transform..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="min-h-[200px] resize-none border-0 p-4 focus:ring-0"
-                disabled={loading}
-              />
-            </Card>
+            <div className="space-y-2">
+              <Card className="overflow-hidden border-2">
+                <Textarea
+                  placeholder="Enter text to transform..."
+                  value={text}
+                  onChange={handleTextChange}
+                  className="min-h-[200px] resize-none border-0 p-4 focus:ring-0"
+                  disabled={loading}
+                />
+              </Card>
+              {validationError && <ValidationMessage title="Input Validation" message={validationError} type="error" />}
+            </div>
 
             <TransformationControls options={options} onChange={setOptions} disabled={loading} />
 
-            <Button className="w-full" size="lg" onClick={handleTransform} disabled={loading || !text.trim()}>
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleTransform}
+              disabled={loading || !text.trim() || !!validationError}
+            >
               {loading ? "Transforming..." : "Transform Text"}
             </Button>
           </section>

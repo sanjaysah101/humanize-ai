@@ -40,8 +40,5 @@ A sophisticated system for transforming AI-generated text into natural, human-li
 - **Pattern**: Clean Architecture
 - **State Management**: Functional programming (fp-ts 2.16.9)
 - **Utilities**:
-  - Monet.js 0.9.3
   - Ramda 0.30.1
   - Mathjs 13.2.0
-
-## Quick Start

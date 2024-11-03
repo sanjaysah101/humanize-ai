@@ -16,7 +16,6 @@
 ### 3. Functional Programming
 
 - fp-ts: Functional programming utilities
-- monet.js: Monadic types
 - ramda: Functional utilities
 
 ### 4. Mathematics

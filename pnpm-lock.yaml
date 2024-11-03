@@ -71,9 +71,6 @@ importers:
       mathjs:
         specifier: ^13.2.0
         version: 13.2.0
-      monet:
-        specifier: ^0.9.3
-        version: 0.9.3
       mongodb:
         specifier: ^6.10.0
         version: 6.10.0
@@ -2053,10 +2050,6 @@ packages:
   mkdirp@0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
-
-  monet@0.9.3:
-    resolution: {integrity: sha512-t1hzyR2uXrkENSn1cZC487Tb6FcLUMBvRnCvTT/1SE/uJy6OJR2l9tb80p+tZOuopFK4+Ch4gy0vxr9nkqxT/w==}
-    engines: {node: '>=12', npm: '>=6'}
 
   mongodb-connection-string-url@3.0.1:
     resolution: {integrity: sha512-XqMGwRX0Lgn05TDB4PyG2h2kKO/FfWJyCzYQbIhXUxz7ETt0I/FqHjUeqj37irJ+Dl1ZtU82uYyj14u2XsZKfg==}
@@ -4961,8 +4954,6 @@ snapshots:
   mkdirp@0.5.6:
     dependencies:
       minimist: 1.2.8
-
-  monet@0.9.3: {}
 
   mongodb-connection-string-url@3.0.1:
     dependencies:

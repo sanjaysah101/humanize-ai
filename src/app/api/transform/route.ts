@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { transformText } from "@/app/actions/transform";
 import { TransformationOptions } from "@/core/entities/transformation";
+import { TEXT_VALIDATION, validateTransformText } from "@/utils/validation";
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -13,8 +14,16 @@ export const POST = async (request: NextRequest) => {
       return NextResponse.json({ error: "Invalid text input" }, { status: 400 });
     }
 
-    if (text.length > 5000) {
-      return NextResponse.json({ error: "Text too long. Maximum 5000 characters allowed." }, { status: 400 });
+    const validation = validateTransformText(text);
+    if (!validation.isValid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    if (text.length > TEXT_VALIDATION.MAX_CHARS) {
+      return NextResponse.json(
+        { error: `Text too long. Maximum ${TEXT_VALIDATION.MAX_CHARS} characters allowed.` },
+        { status: 400 }
+      );
     }
 
     const result = await transformText(text, options as TransformationOptions);

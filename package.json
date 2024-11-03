@@ -34,7 +34,6 @@
     "fp-ts": "^2.16.9",
     "lucide-react": "^0.454.0",
     "mathjs": "^13.2.0",
-    "monet": "^0.9.3",
     "mongodb": "^6.10.0",
     "mongoose": "^8.8.0",
     "natural": "^8.0.1",
