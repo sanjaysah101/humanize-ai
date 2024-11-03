@@ -1,68 +1,89 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "@/components/ui";
-import { EmotionalTone, TransformationOptions, TransformationResponse } from "@/core/entities/transformation";
+import { transformText } from "@/app/actions/transform";
+import { TransformationResultView } from "@/components/TransformationResult";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { TransformationOptions, TransformationResult } from "@/core/entities/transformation";
+import { toast } from "@/hooks/use-toast";
 
-const emotionalTones: EmotionalTone[] = ["neutral", "positive", "negative", "professional", "casual"];
+const emotionalTones = ["neutral", "positive", "negative", "professional", "casual"] as const;
 
 export default function Home() {
   const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<TransformationResult | null>(null);
   const [options, setOptions] = useState<TransformationOptions>({
-    formality: "formal",
-    creativity: 0.7,
-    preserveIntent: true,
+    formality: "informal",
     emotionalTone: "neutral",
+    creativity: 0.5,
+    preserveIntent: true,
     varietyLevel: 0.5,
     contextPreservation: 0.8,
   });
-  const [result, setResult] = useState<TransformationResponse | null>(null);
-  const [isPending, startTransition] = useTransition();
 
-  const handleTransform = () => {
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/transform", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, options }),
+  const handleTransform = async () => {
+    if (!text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some text to transform",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await transformText(text, options);
+      if (response.success && response.data) {
+        setResult(response.data);
+        toast({
+          title: "Success",
+          description: "Text transformed successfully",
         });
-        const data = await response.json();
-        setResult(data);
-      } catch {
-        setResult({
-          success: false,
-          error: "Failed to transform text",
-        });
+      } else {
+        throw new Error(response.error || "Failed to transform text");
       }
-    });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to transform text",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="mx-auto max-w-4xl p-6">
-        <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-4xl font-bold text-transparent">
-          AI Text Humanizer
-        </h1>
-        <p className="mb-8 text-gray-600">Transform AI-generated text into natural, human-like content</p>
+    <main className="container max-w-4xl space-y-8 py-10">
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">AI Text Humanizer</h1>
+        <p className="text-gray-600">Transform AI-generated text into natural, human-like content</p>
+      </div>
 
+      <Card className="p-6">
         <div className="space-y-6">
-          <div className="space-y-2">
-            <Textarea
-              placeholder="Enter AI-generated text to humanize..."
-              className="min-h-[200px] text-base"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-          </div>
+          <Textarea
+            placeholder="Enter AI-generated text to humanize..."
+            className="min-h-[200px] text-base"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Emotional Tone</label>
               <Select
                 value={options.emotionalTone}
-                onValueChange={(value: EmotionalTone) => setOptions({ ...options, emotionalTone: value })}
+                onValueChange={(value: (typeof emotionalTones)[number]) =>
+                  setOptions({ ...options, emotionalTone: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -94,42 +115,35 @@ export default function Home() {
             </div>
           </div>
 
-          <Button onClick={handleTransform} disabled={isPending || !text} className="w-full">
-            {isPending ? "Transforming..." : "Humanize Text"}
-          </Button>
-
-          {result && (
-            <div className="rounded-lg border bg-card p-6">
-              <h2 className="mb-4 text-xl font-semibold">Result</h2>
-              {result.success && result.data ? (
-                <>
-                  <div className="prose max-w-none">
-                    <p>{result.data.transformedText}</p>
-                  </div>
-                  {result.data.transformations.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="mb-2 font-medium">Transformations Applied:</h3>
-                      <ul className="space-y-1 text-sm text-gray-600">
-                        {result.data.transformations.map((t, i) => (
-                          <li key={i}>
-                            <span className="font-mono">{t.original}</span> →{" "}
-                            <span className="font-mono">{t.replacement}</span>{" "}
-                            <span className="text-gray-500">
-                              ({t.type}, {(t.confidence * 100).toFixed(0)}%)
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-red-500">{result.error}</div>
-              )}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Creativity Level</label>
+              <Slider
+                value={[options.creativity]}
+                onValueChange={([value]) => setOptions({ ...options, creativity: value })}
+                max={1}
+                step={0.1}
+              />
             </div>
-          )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Context Preservation</label>
+              <Slider
+                value={[options.contextPreservation]}
+                onValueChange={([value]) => setOptions({ ...options, contextPreservation: value })}
+                max={1}
+                step={0.1}
+              />
+            </div>
+          </div>
+
+          <Button className="w-full" size="lg" onClick={handleTransform} disabled={loading || !text.trim()}>
+            {loading ? "Transforming..." : "Transform Text"}
+          </Button>
         </div>
-      </div>
-    </div>
+      </Card>
+
+      {result && <TransformationResultView result={result} />}
+    </main>
   );
 }
