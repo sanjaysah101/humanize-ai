@@ -11,6 +11,10 @@ A sophisticated system for transforming AI-generated text into natural, human-li
 - Real-time authenticity verification with confidence scoring
 - Memory-efficient caching system
 
+## Demo
+
+[![AI Text Humanization Demo](https://img.youtube.com/vi/8ym-5hcz_Eg/0.jpg)](https://youtu.be/8ym-5hcz_Eg)
+
 ## Technical Stack
 
 ### Frontend
