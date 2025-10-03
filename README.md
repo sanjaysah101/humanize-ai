@@ -46,3 +46,15 @@ A sophisticated system for transforming AI-generated text into natural, human-li
 - **Utilities**:
   - Ramda 0.30.1
   - Mathjs 13.2.0
+
+---
+
+## Achievements
+
+- Ranked 3rd place in the Hackathon Raptors' "Humanizing AI Text" hackathon held in November 2024.
+- Recognized as a valued participant for innovative contributions to AI text humanization.
+- Event organized by leading tech professionals for social good.
+
+![Hackathon Certificate](<./public/Certificate of Appreciation in Humanizing AI Text Hackathon 2024 - 3rd Place_page-0001.jpg>)
+
+For more details, visit the hackathon website: [https://aihumanizehack.com/](https://aihumanizehack.com/)
