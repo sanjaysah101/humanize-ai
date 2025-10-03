@@ -5,8 +5,8 @@ Thank you for your interest in contributing to Humanize-AI! We appreciate your t
 - [Code of Conduct](#code-of-conduct)
 - [Contributing](#contributing)
   - [Becoming a collaborator](#becoming-a-collaborator)
-- [Getting started](#getting-started)
-- [Commit Guidelines](#commit-guidelines)
+- [Getting started](#how-to-contribute)
+- [Commit Guidelines](#commit-message-guidelines)
 
 ## Code of Conduct
 
@@ -62,7 +62,7 @@ Before you start, ensure you have the following prerequisites installed:
 
 #### 1. **Fork the Repository**
 
-Click the fork button in the top right to clone the [Humanize-AI](https://github.com/sanjaysah101/humanize-ai/fork)
+Click the fork button in the top right to fork the [Humanize-AI](https://github.com/sanjaysah101/humanize-ai/fork)
 
 #### 2. **Clone the Repository**
 
@@ -70,9 +70,9 @@ Once you've forked the repository, clone it to your local machine:
 Clone your fork using SSH, GitHub CLI, or HTTPS.
 
 ```bash
-git clone git@github.com:sanjaysah101/humanize-ai.git # SSH
-git clone https://github.com/sanjaysah101/humanize-ai.git # HTTPS
-gh repo clone sanjaysah101/humanize-ai # GitHub CLI
+git clone git@github.com:<YOUR_USERNAME>/humanize-ai.git # SSH
+git clone https://github.com/<YOUR_USERNAME>/humanize-ai.git # HTTPS
+gh repo clone <YOUR_USERNAME>/humanize-ai # GitHub CLI
 ```
 
 #### 3. Change into the humanize-ai directory
@@ -86,7 +86,7 @@ cd humanize-ai
 Create a new branch for your feature, bug fix, or documentation update:
 
 ```bash
-  git checkout -b <name-of-your-branch>
+git checkout -b <name-of-your-branch>
 ```
 
 #### 5. **Install Dependencies**
@@ -124,7 +124,7 @@ git commit -m "Add new feature for user registration"
 Push your changes to your forked Repository on GitHub:
 
 ```bash
-  git push -u origin name-of-your-branch
+git push -u origin name-of-your-branch
 ```
 
 #### 10. **Create a Pull Request (PR)**
@@ -146,7 +146,7 @@ The maintainers will review your PR and may suggest changes. Once approved, your
 
 ### Commit Message Guidelines
 
-- Commit messages must include a "type" as described on Conventional Commits
+- Commit messages must include a "type" as described on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 - Commit messages **must** start with a capital letter
 - Commit messages **must not** end with a period `.`
 - Commit messages **must** be in English
@@ -166,7 +166,7 @@ Ensure that your code adheres to the existing coding standards and passes all te
 
 ### Pre-commit Hooks
 
-This project uses [Husky][] for Git pre-commit hooks.
+his project uses [Husky](https://typicode.github.io/husky/) for Git pre-commit hooks.
 
 ### When merging
 

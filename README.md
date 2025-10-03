@@ -55,6 +55,6 @@ A sophisticated system for transforming AI-generated text into natural, human-li
 - Recognized as a valued participant for innovative contributions to AI text humanization.
 - Event organized by leading tech professionals for social good.
 
-![Hackathon Certificate](https://drive.google.com/uc?export=view&id=1m5OxtHbClPcyjHjaHyUY37MRvXgcmiqn)
+![Hackathon Certificate](<./public/Certificate of Appreciation in Humanizing AI Text Hackathon 2024 - 3rd Place_page-0001.jpg>)
 
 For more details, visit the hackathon website: [https://aihumanizehack.com/](https://aihumanizehack.com/)
