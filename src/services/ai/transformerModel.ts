@@ -1,4 +1,4 @@
-import { GenerativeModel, GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from "@google/genai";
 import { HfInference } from "@huggingface/inference";
 import * as O from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
@@ -6,9 +6,40 @@ import { pipe } from "fp-ts/function";
 import { EmotionalTone, TransformationOptions } from "@/core/entities/transformation";
 import { TransformationModels } from "@/lib/math/transformationModels";
 
+type ContentPart = { text: string };
+type Content = { role: string; parts: ContentPart[] };
+
+type GenerationConfig = {
+  temperature: number;
+  topP: number;
+  topK: number;
+  maxOutputTokens: number;
+};
+
+type SafetySettings = {
+  category: HarmCategory;
+  threshold: HarmBlockThreshold;
+};
+
+type GenerateContentArgs = {
+  model: string;
+  contents: Content[];
+  generationConfig: GenerationConfig;
+  safetySettings: SafetySettings[];
+};
+
+type GenerateContentResult = {
+  response: { text: () => string };
+};
+
+type GenerativeAIClient = {
+  models: {
+    generateContent: (args: GenerateContentArgs) => Promise<GenerateContentResult>;
+  };
+};
+
 export class TransformerModel {
-  private genAI: GoogleGenerativeAI;
-  private geminiModel: GenerativeModel;
+  private genAI: GenerativeAIClient;
   private huggingface: HfInference;
   private fallbackModelId: string = "meta-llama/Llama-2-70b-chat-hf";
   private maxRetries = 3;
@@ -19,8 +50,7 @@ export class TransformerModel {
     if (!process.env.GOOGLE_API_KEY) {
       throw new Error("GOOGLE_API_KEY is not set");
     }
-    this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    this.geminiModel = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+    this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY }) as unknown as GenerativeAIClient;
 
     // Initialize HuggingFace client for fallback
     if (!process.env.HUGGINGFACE_API_KEY) {
@@ -97,7 +127,8 @@ export class TransformerModel {
       const prompt = this.constructGeminiPrompt(input, options);
 
       // Generate content with Gemini
-      const result = await this.geminiModel.generateContent({
+      const result = await this.genAI.models.generateContent({
+        model: "gemini-1.5-pro",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: Math.min(options.creativity, 0.9),
