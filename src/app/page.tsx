@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { transformText } from "@/app/actions/transform";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TransformationControls } from "@/components/TransformationControls";
 import { TransformationPlaceholder } from "@/components/TransformationPlaceholder";
 import { TransformationResultView } from "@/components/TransformationResult";
@@ -92,7 +93,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <header className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-bold">AI Text Humanizer</span>
+          <ThemeToggle />
+        </div>
+      </header>
+
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <h1 className="mb-8 text-center text-4xl font-bold tracking-tight">AI Text Humanizer</h1>
 
@@ -116,6 +124,7 @@ export default function Home() {
 
             <Button
               className="w-full"
+              variant="contrast"
               size="lg"
               onClick={handleTransform}
               disabled={loading || !text.trim() || !!validationError}
