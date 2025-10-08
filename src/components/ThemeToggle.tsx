@@ -1,12 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/hooks/use-theme";
 
 export const ThemeToggle = () => {
-  const { theme, toggleTheme, mounted } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
 
   // Avoid hydration mismatch
   if (!mounted) {
@@ -20,7 +31,7 @@ export const ThemeToggle = () => {
 
   return (
     <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-      {theme === "dark" ? (
+      {resolvedTheme === "dark" ? (
         <>
           <Sun className="h-5 w-5" />
           <span className="sr-only">Switch to light mode</span>

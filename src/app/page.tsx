@@ -96,7 +96,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">AI Text Humanizer</h1>
+          <span className="text-2xl font-bold">AI Text Humanizer</span>
           <ThemeToggle />
         </div>
       </header>
@@ -123,7 +123,8 @@ export default function Home() {
             <TransformationControls options={options} onChange={setOptions} disabled={loading} />
 
             <Button
-              className="w-full dark:!bg-white dark:!text-gray-900 dark:hover:!bg-gray-100"
+              className="w-full"
+              variant="contrast"
               size="lg"
               onClick={handleTransform}
               disabled={loading || !text.trim() || !!validationError}
