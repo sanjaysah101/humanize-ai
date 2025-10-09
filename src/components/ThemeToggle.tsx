@@ -6,6 +6,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
+import AccentDropdown from "@/components/ui/AccentDropdown";
 
 export const ThemeToggle = () => {
   const { resolvedTheme, setTheme } = useTheme();
@@ -22,26 +23,31 @@ export const ThemeToggle = () => {
   // Avoid hydration mismatch
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" disabled className="opacity-50">
-        <Sun className="h-5 w-5" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" disabled className="opacity-50">
+          <Sun className="h-5 w-5" />
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-      {resolvedTheme === "dark" ? (
-        <>
-          <Sun className="h-5 w-5" />
-          <span className="sr-only">Switch to light mode</span>
-        </>
-      ) : (
-        <>
-          <Moon className="h-5 w-5" />
-          <span className="sr-only">Switch to dark mode</span>
-        </>
-      )}
-    </Button>
+    <div className="flex gap-2">
+      <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+        {resolvedTheme === "dark" ? (
+          <>
+            <Sun className="h-5 w-5" />
+            <span className="sr-only">Switch to light mode</span>
+          </>
+        ) : (
+          <>
+            <Moon className="h-5 w-5" />
+            <span className="sr-only">Switch to dark mode</span>
+          </>
+        )}
+      </Button>
+      <AccentDropdown />
+    </div>
   );
 };
