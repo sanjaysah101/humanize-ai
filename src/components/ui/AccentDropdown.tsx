@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import { Palette } from "lucide-react";
+import { useTheme } from "next-themes";
+
 import { Button } from "@/components/ui/button";
 
 const ACCENT_COLORS = {
@@ -20,6 +23,7 @@ const ACCENT_COLORS = {
 export default function AccentDropdown() {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState("Default");
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const saved = localStorage.getItem("accent-color");
@@ -41,17 +45,16 @@ export default function AccentDropdown() {
 
   return (
     <div className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setOpen(!open)}
-        aria-label="Accent color selector"
-      >
+      <Button variant="ghost" size="icon" onClick={() => setOpen(!open)} aria-label="Accent color selector">
         <Palette className="h-5 w-5" />
       </Button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-32 rounded-md border border-slate-700 bg-slate-900/90 shadow-lg backdrop-blur-sm z-50">
+        <div
+          className={`absolute right-0 z-50 mt-2 w-32 rounded-md border shadow-lg backdrop-blur-sm ${
+            resolvedTheme === "dark" ? "border-slate-700 bg-slate-900/90" : "border-slate-200 bg-white/90"
+          }`}
+        >
           {Object.keys(ACCENT_COLORS).map((color) => (
             <button
               key={color}
@@ -60,8 +63,14 @@ export default function AccentDropdown() {
                 applyAccent(color);
                 setOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 ${
-                selected === color ? "text-[hsl(var(--accent-primary))]" : "text-slate-200"
+              className={`w-full px-3 py-2 text-left text-sm ${
+                resolvedTheme === "dark" ? "hover:bg-slate-800" : "hover:bg-slate-100"
+              } ${
+                selected === color
+                  ? "text-[hsl(var(--accent-primary))]"
+                  : resolvedTheme === "dark"
+                    ? "text-slate-200"
+                    : "text-slate-800"
               }`}
             >
               {color}
@@ -72,4 +81,3 @@ export default function AccentDropdown() {
     </div>
   );
 }
-
