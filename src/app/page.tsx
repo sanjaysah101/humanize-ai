@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 import { transformText } from "@/app/actions/transform";
 import { ThemeToggle } from "@/components/ThemeToggle";

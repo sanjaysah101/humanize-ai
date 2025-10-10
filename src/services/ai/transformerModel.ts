@@ -7,27 +7,31 @@ import { EmotionalTone, TransformationOptions } from "@/core/entities/transforma
 import { TransformationModels } from "@/lib/math/transformationModels";
 
 export class TransformerModel {
-  private genAI: GoogleGenAI;
-  private huggingface: HfInference;
+  private genAI!: GoogleGenAI;
+  private huggingface!: HfInference;
   private fallbackModelId: string = "meta-llama/Llama-2-70b-chat-hf";
   private maxRetries = 3;
   private baseDelay = 2000;
 
-  constructor() {
-    // Initialize Google Gemini client
-    if (!process.env.GOOGLE_API_KEY) {
-      throw new Error("GOOGLE_API_KEY is not set");
-    }
-    this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+  constructor() {}
 
-    // Initialize HuggingFace client for fallback
-    if (!process.env.HUGGINGFACE_API_KEY) {
-      throw new Error("HUGGINGFACE_API_KEY is not set");
+  private ensureInitialized() {
+    if (!this.genAI) {
+      if (!process.env.GOOGLE_API_KEY) {
+        throw new Error("GOOGLE_API_KEY is not set");
+      }
+      this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
     }
-    this.huggingface = new HfInference(process.env.HUGGINGFACE_API_KEY);
+    if (!this.huggingface) {
+      if (!process.env.HUGGINGFACE_API_KEY) {
+        throw new Error("HUGGINGFACE_API_KEY is not set");
+      }
+      this.huggingface = new HfInference(process.env.HUGGINGFACE_API_KEY);
+    }
   }
 
   async generateHumanLikeText(input: string, options: TransformationOptions): Promise<string> {
+    this.ensureInitialized();
     let attempt = 0;
     let delay = this.baseDelay;
 
