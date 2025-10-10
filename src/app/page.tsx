@@ -124,7 +124,7 @@ export default function Home() {
 
             <Button
               className="w-full"
-              variant="contrast"
+              variant={"default"}
               size="lg"
               onClick={handleTransform}
               disabled={loading || !text.trim() || !!validationError}
