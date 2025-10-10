@@ -1,4 +1,4 @@
-import { GenerativeModel, GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from "@google/genai";
 import { HfInference } from "@huggingface/inference";
 import * as O from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
@@ -7,8 +7,7 @@ import { EmotionalTone, TransformationOptions } from "@/core/entities/transforma
 import { TransformationModels } from "@/lib/math/transformationModels";
 
 export class TransformerModel {
-  private genAI: GoogleGenerativeAI;
-  private geminiModel: GenerativeModel;
+  private genAI: GoogleGenAI;
   private huggingface: HfInference;
   private fallbackModelId: string = "meta-llama/Llama-2-70b-chat-hf";
   private maxRetries = 3;
@@ -19,8 +18,7 @@ export class TransformerModel {
     if (!process.env.GOOGLE_API_KEY) {
       throw new Error("GOOGLE_API_KEY is not set");
     }
-    this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    this.geminiModel = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+    this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
     // Initialize HuggingFace client for fallback
     if (!process.env.HUGGINGFACE_API_KEY) {
@@ -97,36 +95,36 @@ export class TransformerModel {
       const prompt = this.constructGeminiPrompt(input, options);
 
       // Generate content with Gemini
-      const result = await this.geminiModel.generateContent({
+      const result = await this.genAI.models.generateContent({
+        model: "gemini-2.0-flash",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
+        config: {
           temperature: Math.min(options.creativity, 0.9),
           topP: 0.95,
           topK: 40,
           maxOutputTokens: 2048,
+          safetySettings: [
+            {
+              category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+          ],
         },
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-        ],
       });
 
-      const { response } = result;
-      return response.text();
+      return result.candidates?.[0]?.content?.parts?.[0]?.text || null;
     } catch {
       return null;
     }
