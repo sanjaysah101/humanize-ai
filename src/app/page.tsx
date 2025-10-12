@@ -108,7 +108,7 @@ export default function Home() {
           {/* Input Section */}
           <section className="space-y-6">
             <div className="space-y-2">
-              <Card className="overflow-hidden border-2">
+              <Card className="overflow-hidden border-2 focus-within:border-[hsl(var(--accent-primary))] transition-colors">
                 <Textarea
                   placeholder="Enter text to transform..."
                   value={text}
