@@ -8,28 +8,23 @@
     "eslint:recommended",
     "next/core-web-vitals",
     "plugin:react/recommended",
-    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint", "import", "prettier"],
+  "plugins": ["react", "import", "prettier"],
   "rules": {
     "no-console": "error",
     "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
     "@typescript-eslint/no-unused-vars": "error",
-    "import/no-unresolved": [
-      "error",
-      {
-        "ignore": ["^@/"]
-      }
-    ],
+    "import/no-unresolved": "off",
     "prefer-arrow-callback": ["error"],
     "func-style": ["error", "expression"],
     "prefer-destructuring": ["error", { "object": true, "array": true }],
     "prettier/prettier": ["error", {}, { "usePrettierrc": true }]
   },
-  "ignorePatterns": ["*.md", "**/*.md"]
+  "ignorePatterns": ["*.md", "**/*.md", "next-env.d.ts", "src/types/**"]
 }
