@@ -108,7 +108,7 @@ export default function Home() {
           {/* Input Section */}
           <section className="space-y-6">
             <div className="space-y-2">
-              <Card className="overflow-hidden border-2 focus-within:border-[hsl(var(--accent-primary))] transition-colors">
+              <Card className="overflow-hidden border-2 transition-colors focus-within:border-[hsl(var(--accent-primary))]">
                 <Textarea
                   placeholder="Enter text to transform..."
                   value={text}
@@ -124,7 +124,7 @@ export default function Home() {
 
             <Button
               className="w-full"
-              variant="contrast"
+              variant={"default"}
               size="lg"
               onClick={handleTransform}
               disabled={loading || !text.trim() || !!validationError}
