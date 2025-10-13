@@ -22,19 +22,14 @@ const ACCENT_COLORS = {
 
 export default function AccentDropdown() {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState("Default");
-  const { resolvedTheme } = useTheme();
-
-  useEffect(() => {
-    const saved = localStorage.getItem("accent-color");
-    if (saved && ACCENT_COLORS[saved as keyof typeof ACCENT_COLORS]) {
-      setSelected(saved);
-      applyAccent(saved);
-    } else {
-      // Apply default on first load
-      applyAccent("Default");
+  const [selected, setSelected] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("accent-color");
+      return saved && ACCENT_COLORS[saved as keyof typeof ACCENT_COLORS] ? saved : "Default";
     }
-  }, []);
+    return "Default";
+  });
+  const { resolvedTheme } = useTheme();
 
   const applyAccent = (color: string) => {
     const { primary, glow } = ACCENT_COLORS[color as keyof typeof ACCENT_COLORS];
@@ -42,6 +37,10 @@ export default function AccentDropdown() {
     document.documentElement.style.setProperty("--accent-glow", glow);
     localStorage.setItem("accent-color", color);
   };
+
+  useEffect(() => {
+    applyAccent(selected);
+  }, [selected]);
 
   return (
     <div className="relative">

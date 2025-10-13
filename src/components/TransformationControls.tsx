@@ -20,12 +20,15 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
       <div className="space-y-3 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Creativity Level</label>
+            <label htmlFor="creativity-slider" className="text-sm font-medium">
+              Creativity Level
+            </label>
             <InfoTooltip content="Higher creativity allows more varied word choices" />
           </div>
           <Badge variant="secondary">{Math.round(options.creativity * 100)}%</Badge>
         </div>
         <Slider
+          id="creativity-slider"
           value={[options.creativity]}
           onValueChange={([value]) => onChange({ ...options, creativity: value })}
           min={0}
@@ -39,12 +42,15 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
       <div className="space-y-3 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Context Preservation</label>
+            <label htmlFor="context-slider" className="text-sm font-medium">
+              Context Preservation
+            </label>
             <InfoTooltip content="Higher values maintain more original meaning" />
           </div>
           <Badge variant="secondary">{Math.round(options.contextPreservation * 100)}%</Badge>
         </div>
         <Slider
+          id="context-slider"
           value={[options.contextPreservation]}
           onValueChange={([value]) => onChange({ ...options, contextPreservation: value })}
           min={0.5}
@@ -58,7 +64,9 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
       <div className="space-y-3 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Emotional Tone</label>
+            <label htmlFor="emotional-tone-select" className="text-sm font-medium">
+              Emotional Tone
+            </label>
             <InfoTooltip content="Adjust the emotional tone of the text" />
           </div>
         </div>
@@ -67,7 +75,7 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
           onValueChange={(value: EmotionalTone) => onChange({ ...options, emotionalTone: value })}
           disabled={disabled}
         >
-          <SelectTrigger>
+          <SelectTrigger id="emotional-tone-select">
             <SelectValue placeholder="Select tone" />
           </SelectTrigger>
           <SelectContent>
@@ -84,7 +92,9 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
       <div className="space-y-3 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Formality</label>
+            <label htmlFor="formality-select" className="text-sm font-medium">
+              Formality
+            </label>
             <InfoTooltip content="Choose between formal and informal language" />
           </div>
           <Select
@@ -92,7 +102,7 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
             disabled={disabled}
             onValueChange={(value: "formal" | "informal") => onChange({ ...options, formality: value })}
           >
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger id="formality-select" className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -106,10 +116,13 @@ export const TransformationControls = ({ options, onChange, disabled }: Transfor
       {/* Preserve Intent */}
       <div className="flex items-center justify-between pt-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Preserve Intent</label>
+          <label htmlFor="preserve-intent-switch" className="text-sm font-medium">
+            Preserve Intent
+          </label>
           <InfoTooltip content="Maintain the original meaning while transforming" />
         </div>
         <Switch
+          id="preserve-intent-switch"
           checked={options.preserveIntent}
           onCheckedChange={(checked) => onChange({ ...options, preserveIntent: checked })}
           disabled={disabled}

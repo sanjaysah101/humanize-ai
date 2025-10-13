@@ -16,8 +16,6 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        contrast:
-          "bg-[hsl(var(--accent-primary))] text-white shadow-lg hover:bg-[hsl(var(--accent-glow))] transition-all duration-200 hover:shadow-[0_0_20px_hsl(var(--accent-glow)/0.5)]",
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -33,15 +31,16 @@ const buttonVariants = cva(
   }
 );
 
-export interface ButtonProps extends React.ComponentPropsWithoutRef<"button">, VariantProps<typeof buttonVariants> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
-const Button = React.forwardRef<React.ElementRef<"button">, ButtonProps>(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    const merged = { className: cn(buttonVariants({ variant, size, className })), ref, ...props };
-    return <Comp {...(merged as unknown as Record<string, unknown>)} />;
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
   }
 );
 Button.displayName = "Button";

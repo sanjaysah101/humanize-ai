@@ -5,32 +5,31 @@ import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
-import { Button } from "@/components/ui/button";
 import AccentDropdown from "@/components/ui/AccentDropdown";
+import { Button } from "@/components/ui/button";
 
 export const ThemeToggle = () => {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
+
+  if (!mounted) {
+    // Return a placeholder or null to avoid hydration errors
+    return (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" disabled className="h-9 w-9" />
+        <AccentDropdown />
+      </div>
+    );
+  }
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
-
-  // Avoid hydration mismatch
-  if (!mounted) {
-    return (
-      <div className="flex gap-2">
-        <Button variant="ghost" size="icon" disabled className="opacity-50">
-          <Sun className="h-5 w-5" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="flex gap-2">
