@@ -1,15 +1,36 @@
+"use client";
+
+import { Copy, Share2 } from "lucide-react";
+
 import { TransformationResult } from "@/core/entities/transformation";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { useShare } from "@/hooks/useShare";
 
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface TransformationResultProps {
   result: TransformationResult;
 }
 
 export const TransformationResultView = ({ result }: TransformationResultProps) => {
+  const { copyToClipboard, isLoading: isCopyLoading } = useCopyToClipboard();
+  const { share, isLoading: isShareLoading } = useShare();
   const confidencePercentage = Math.round(result.confidence * 100);
+
+  const handleCopy = () => {
+    copyToClipboard(result.transformedText);
+  };
+
+  const handleShare = () => {
+    share({
+      text: result.transformedText,
+      title: "Humanized AI Text",
+    });
+  };
 
   const getTypeColor = (type: "word" | "syntax" | "emotional") => {
     switch (type) {
@@ -38,6 +59,49 @@ export const TransformationResultView = ({ result }: TransformationResultProps) 
           </div>
 
           <p className="leading-relaxed text-gray-700">{result.transformedText}</p>
+
+          {/* Copy and Share buttons */}
+          <div className="flex justify-end gap-2 pt-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                    disabled={isCopyLoading}
+                    className="h-9 w-9 p-0 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    aria-label="Copy transformed text to clipboard"
+                  >
+                    <Copy className="h-4 w-4" />
+                    <span className="sr-only">Copy to clipboard</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="hidden md:block">
+                  <p>Copy to clipboard</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShare}
+                    disabled={isShareLoading}
+                    className="h-9 w-9 p-0 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    aria-label="Share transformed text"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    <span className="sr-only">Share text</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="hidden md:block">
+                  <p>Share text</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           {result.transformations.length > 0 && (
             <div className="mt-4">

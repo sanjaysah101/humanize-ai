@@ -5,6 +5,7 @@ import React from "react";
 import { Analytics } from "@vercel/analytics/react";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
+          <Toaster />
           <Analytics />
         </ThemeProvider>
       </body>
