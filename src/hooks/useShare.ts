@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useToast } from "@/hooks/use-toast";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
@@ -21,67 +21,69 @@ export const useShare = () => {
   const { toast } = useToast();
   const { copyToClipboard } = useCopyToClipboard();
 
-  const share = async (data: ShareData) => {
-    if (!data.text) {
-      toast({
-        title: "Nothing to share",
-        description: "No text available to share",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Checking if Web Share API is available (mostly mobile browsers)
-      if (typeof navigator !== "undefined") {
-        const nav = navigator as MaybeWebShareNavigator;
-        if (typeof nav.share === "function") {
-          const shareData: ShareData = {
-            text: data.text,
-            title: data.title || "Humanized AI Text",
-            ...(data.url && { url: data.url }),
-          };
-
-          const canShareOk = typeof nav.canShare === "function" ? nav.canShare(shareData) : true;
-          if (canShareOk) {
-            await nav.share(shareData);
-            return true;
-          }
-        }
-      }
-      // Falling back to copy to clipboard
-      const copySuccess = await copyToClipboard(data.text, false);
+  // Helper function to handle clipboard fallback
+  const handleClipboardFallback = useCallback(
+    async (text: string, fallbackMessage: string) => {
+      const copySuccess = await copyToClipboard(text, false);
       if (copySuccess) {
         toast({
-          title: "Ready to share!",
+          title: fallbackMessage,
           description: "Text copied to clipboard - paste it anywhere",
           variant: "default",
         });
       }
       return copySuccess;
-    } catch (error) {
-      // Handling user cancellation (not really an error)
-      if (error instanceof Error && error.name === "AbortError") {
-        // Not showing error as user cancelled the share dialog
+    },
+    [copyToClipboard, toast]
+  );
+
+  const share = useCallback(
+    async (data: ShareData) => {
+      if (!data.text) {
+        toast({
+          title: "Nothing to share",
+          description: "No text available to share",
+          variant: "destructive",
+        });
         return false;
       }
 
-      // Falling back to copy on any other errors (like permission denied)
-      const copySuccess = await copyToClipboard(data.text, false);
-      if (copySuccess) {
-        toast({
-          title: "Share unavailable",
-          description: "Text copied to clipboard instead",
-          variant: "default",
-        });
+      setIsLoading(true);
+
+      try {
+        // Checking if Web Share API is available (mostly mobile browsers)
+        if (typeof navigator !== "undefined") {
+          const nav = navigator as MaybeWebShareNavigator;
+          if (typeof nav.share === "function") {
+            const shareData: ShareData = {
+              text: data.text,
+              title: data.title || "Humanized AI Text",
+              ...(data.url && { url: data.url }),
+            };
+
+            const canShareOk = typeof nav.canShare === "function" ? nav.canShare(shareData) : true;
+            if (canShareOk) {
+              await nav.share(shareData);
+              return true;
+            }
+          }
+        }
+        // Falling back to copy to clipboard
+        return await handleClipboardFallback(data.text, "Ready to share!");
+      } catch (error) {
+        // Handling user cancellation (not really an error)
+        if (error instanceof Error && error.name === "AbortError") {
+          return false;
+        }
+
+        // Falling back to copy on any other errors (like permission denied)
+        return await handleClipboardFallback(data.text, "Share unavailable");
+      } finally {
+        setIsLoading(false);
       }
-      return copySuccess;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [toast, handleClipboardFallback]
+  );
 
   return { share, isLoading };
 };

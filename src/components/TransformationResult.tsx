@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback } from "react";
+
 import { Copy, Share2 } from "lucide-react";
 
 import { TransformationResult } from "@/core/entities/transformation";
@@ -21,16 +23,16 @@ export const TransformationResultView = ({ result }: TransformationResultProps) 
   const { share, isLoading: isShareLoading } = useShare();
   const confidencePercentage = Math.round(result.confidence * 100);
 
-  const handleCopy = () => {
+  const handleCopy = useCallback(() => {
     copyToClipboard(result.transformedText);
-  };
+  }, [copyToClipboard, result.transformedText]);
 
-  const handleShare = () => {
+  const handleShare = useCallback(() => {
     share({
       text: result.transformedText,
       title: "Humanized AI Text",
     });
-  };
+  }, [share, result.transformedText]);
 
   const getTypeColor = (type: "word" | "syntax" | "emotional") => {
     switch (type) {
