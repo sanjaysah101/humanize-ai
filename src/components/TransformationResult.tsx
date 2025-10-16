@@ -60,7 +60,7 @@ export const TransformationResultView = ({ result }: TransformationResultProps) 
             </div>
           </div>
 
-          <p className="leading-relaxed text-gray-700">{result.transformedText}</p>
+          <p className="leading-relaxed text-gray-400">{result.transformedText}</p>
 
           {/* Copy and Share buttons */}
           <div className="flex justify-end gap-2 pt-2">
