@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 
 import AccentDropdown from "@/components/ui/AccentDropdown";
 import { Button } from "@/components/ui/button";
+import GithubIcon from "@/components/ui/githubIcon";
 
 export const ThemeToggle = () => {
   const { resolvedTheme, setTheme } = useTheme();
@@ -47,6 +48,12 @@ export const ThemeToggle = () => {
         )}
       </Button>
       <AccentDropdown />
+      <GithubIcon
+        url="https://github.com/sanjaysah101/humanize-ai"
+        label="GitHub Repository"
+        darkSrc="/githubIcon2.svg"
+        lightSrc="/githubIcon1.svg"
+      />
     </div>
   );
 };
