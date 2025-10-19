@@ -27,19 +27,8 @@ export const TransformationLoading = () => {
         <span className="text-sm">Transforming your text…</span>
       </div>
       <div className="h-1 w-56 overflow-hidden rounded bg-gray-200 dark:bg-gray-800">
-        <div className="h-full w-1/3 animate-[loading_1.2s_ease_infinite] bg-[hsl(var(--accent-primary))]" />
+        <div className="animate-loading h-full w-1/3 bg-[hsl(var(--accent-primary))]" />
       </div>
-      {/* Tailwind keyframes via arbitrary value */}
-      <style jsx>{`
-        @keyframes loading {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(300%);
-          }
-        }
-      `}</style>
     </Card>
   );
 };
