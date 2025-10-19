@@ -84,10 +84,15 @@ const config: Config = {
             height: "0",
           },
         },
+        loading: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(300%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        loading: "loading 1.2s ease infinite",
       },
     },
   },

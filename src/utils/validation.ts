@@ -23,7 +23,7 @@ const COMMON_WORDS = new Set([
 
 export const TEXT_VALIDATION = {
   MIN_WORDS: 5,
-  MIN_CHARS: 20,
+  MIN_CHARS: 200,
   MAX_CHARS: 5000,
 } as const;
 

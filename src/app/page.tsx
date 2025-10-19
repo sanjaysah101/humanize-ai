@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { transformText } from "@/app/actions/transform";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TransformationControls } from "@/components/TransformationControls";
-import { TransformationPlaceholder } from "@/components/TransformationPlaceholder";
+import { TransformationLoading, TransformationPlaceholder } from "@/components/TransformationPlaceholder";
 import { TransformationResultView } from "@/components/TransformationResult";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -64,18 +64,14 @@ export default function Home() {
     try {
       const response = await transformText(text, options);
       if (response.success && response.data) {
-        // Only accept result if we have meaningful transformations
-        if (response.data.transformations.length > 0) {
-          setResult(response.data);
-          if (response.data.confidence < 0.5) {
-            toast({
-              title: "Low Confidence",
-              description: "Some transformations may not preserve the original meaning",
-              variant: "default",
-            });
-          }
-        } else {
-          throw new Error("No meaningful transformations found");
+        // Accept result even if there are zero recorded transformations
+        setResult(response.data);
+        if (response.data.confidence < 0.5) {
+          toast({
+            title: "Low Confidence",
+            description: "Some transformations may not preserve the original meaning",
+            variant: "default",
+          });
         }
       } else {
         throw new Error(response.error || "Failed to transform text");
@@ -135,7 +131,13 @@ export default function Home() {
 
           {/* Output Section */}
           <section className="space-y-6">
-            {result ? <TransformationResultView result={result} /> : <TransformationPlaceholder />}
+            {loading ? (
+              <TransformationLoading />
+            ) : result ? (
+              <TransformationResultView result={result} />
+            ) : (
+              <TransformationPlaceholder />
+            )}
           </section>
         </div>
       </main>
