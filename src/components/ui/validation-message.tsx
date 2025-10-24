@@ -10,7 +10,7 @@ interface ValidationMessageProps {
 
 export const ValidationMessage = ({ title, message, type }: ValidationMessageProps) => {
   const icons = {
-    error: <AlertCircle className="h-4 w-4 text-destructive" />,
+    error: <AlertCircle className="text-destructive h-4 w-4" />,
     warning: <AlertCircle className="h-4 w-4 text-yellow-500" />,
     info: <Info className="h-4 w-4 text-blue-500" />,
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Palette } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -31,6 +31,9 @@ export default function AccentDropdown() {
   });
   const { resolvedTheme } = useTheme();
 
+  // Add a ref for the dropdown container to detect outside clicks.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const applyAccent = (color: string) => {
     const { primary, glow } = ACCENT_COLORS[color as keyof typeof ACCENT_COLORS];
     document.documentElement.style.setProperty("--accent-primary", primary);
@@ -42,8 +45,33 @@ export default function AccentDropdown() {
     applyAccent(selected);
   }, [selected]);
 
+  // Close the dropdown when clicking outside or pressing Escape.
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (!open) return;
+      const target = event.target as Node | null;
+      if (containerRef.current && target && !containerRef.current.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Button variant="ghost" size="icon" onClick={() => setOpen(!open)} aria-label="Accent color selector">
         <Palette className="h-5 w-5" />
       </Button>
