@@ -7,12 +7,7 @@
     "source.fixAll.eslint": "always"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },

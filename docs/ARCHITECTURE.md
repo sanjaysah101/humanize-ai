@@ -37,13 +37,11 @@ The application follows Clean Architecture principles with clear separation of c
 ### Text Transformation Pipeline
 
 1. Input Processing
-
    - Text sanitization
    - Option validation
    - Context analysis
 
 2. Core Transformation
-
    - Word-level changes
    - Syntax adjustments
    - Emotional tone mapping
