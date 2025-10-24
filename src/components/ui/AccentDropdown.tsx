@@ -47,8 +47,9 @@ export default function AccentDropdown() {
 
   // Close the dropdown when clicking outside or pressing Escape.
   useEffect(() => {
+    if (!open) return;
+
     const onPointerDown = (event: PointerEvent) => {
-      if (!open) return;
       const target = event.target as Node | null;
       if (containerRef.current && target && !containerRef.current.contains(target)) {
         setOpen(false);
