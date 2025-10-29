@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import { transformText } from "@/app/actions/transform";
+import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TransformationControls } from "@/components/TransformationControls";
 import { TransformationLoading, TransformationPlaceholder } from "@/components/TransformationPlaceholder";
@@ -92,7 +93,10 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold">AI Text Humanizer</span>
+          <div className="flex items-center gap-4">
+            <Logo src="/logo1.png" size="h-12 w-14" />
+            <span className="text-2xl font-bold">AI Text Humanizer</span>
+          </div>
           <ThemeToggle />
         </div>
       </header>
