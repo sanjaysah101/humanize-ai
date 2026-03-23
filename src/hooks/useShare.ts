@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from "react";
 
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@ansospace/ui";
+
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 interface ShareData {
@@ -18,7 +19,6 @@ type MaybeWebShareNavigator = Navigator & {
 
 export const useShare = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const { copyToClipboard } = useCopyToClipboard();
 
   // Helper function to handle clipboard fallback
@@ -26,24 +26,20 @@ export const useShare = () => {
     async (text: string, fallbackMessage: string) => {
       const copySuccess = await copyToClipboard(text, false);
       if (copySuccess) {
-        toast({
-          title: fallbackMessage,
+        toast(fallbackMessage, {
           description: "Text copied to clipboard - paste it anywhere",
-          variant: "default",
         });
       }
       return copySuccess;
     },
-    [copyToClipboard, toast]
+    [copyToClipboard]
   );
 
   const share = useCallback(
     async (data: ShareData) => {
       if (!data.text) {
-        toast({
-          title: "Nothing to share",
+        toast.error("Nothing to share", {
           description: "No text available to share",
-          variant: "destructive",
         });
         return false;
       }
@@ -82,7 +78,7 @@ export const useShare = () => {
         setIsLoading(false);
       }
     },
-    [toast, handleClipboardFallback]
+    [handleClipboardFallback]
   );
 
   return { share, isLoading };

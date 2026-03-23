@@ -1,6 +1,5 @@
+import { Card } from "@ansospace/ui";
 import { ArrowRight, Bot, Sparkles } from "lucide-react";
-
-import { Card } from "./ui/card";
 
 export const TransformationPlaceholder = () => {
   return (

@@ -1,23 +1,21 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import React, { useState } from "react";
 
+import { Button, Card, Textarea, ThemeToggle, toast } from "@ansospace/ui";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+
 import { transformText } from "@/app/actions/transform";
-import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { TransformationControls } from "@/components/TransformationControls";
 import { TransformationLoading, TransformationPlaceholder } from "@/components/TransformationPlaceholder";
 import { TransformationResultView } from "@/components/TransformationResult";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { ValidationMessage } from "@/components/ui/validation-message";
+import { ValidationMessage } from "@/components/ui";
 import { TransformationOptions, TransformationResult } from "@/core/entities/transformation";
-import { useToast } from "@/hooks/use-toast";
 import { validateTransformText } from "@/utils/validation";
 
 export default function Home() {
-  const { toast } = useToast();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TransformationResult | null>(null);
@@ -52,10 +50,8 @@ export default function Home() {
 
     if (!validation.isValid) {
       setValidationError(validation.error || "");
-      toast({
-        title: "Validation Error",
+      toast.error("Validation Error", {
         description: validation.error,
-        variant: "destructive",
       });
       return;
     }
@@ -68,20 +64,16 @@ export default function Home() {
         // Accept result even if there are zero recorded transformations
         setResult(response.data);
         if (response.data.confidence < 0.5) {
-          toast({
-            title: "Low Confidence",
+          toast("Low Confidence", {
             description: "Some transformations may not preserve the original meaning",
-            variant: "default",
           });
         }
       } else {
         throw new Error(response.error || "Failed to transform text");
       }
     } catch (error) {
-      toast({
-        title: "Transformation Error",
+      toast.error("Transformation Error", {
         description: error instanceof Error ? error.message : "Failed to transform text",
-        variant: "destructive",
       });
       setResult(null);
     } finally {
@@ -90,25 +82,32 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="from-gray-5 min-h-screen bg-gradient-to-b">
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
+          <Link href="/">
+            <div className="flex items-center gap-4">
+              <Image src="/humanize-ai.png" alt="Logo" width={50} height={50} />
+              <span className="text-2xl font-bold">Humanize AI</span>
+            </div>
+          </Link>
           <div className="flex items-center gap-4">
-            <Logo src="/logo1.png" size="h-12 w-14" />
-            <span className="text-2xl font-bold">AI Text Humanizer</span>
+            <ThemeToggle />
+            <Link href="https://github.com/sanjaysah101/humanize-ai" target="_blank">
+              <SiGithub />
+            </Link>
           </div>
-          <ThemeToggle />
         </div>
       </header>
 
       <main className="container mx-auto max-w-6xl px-4 py-8">
-        <h1 className="mb-8 text-center text-4xl font-bold tracking-tight">AI Text Humanizer</h1>
+        {/* <Typography variant="h1" className="mb-8 text-center">AI Text Humanizer</Typography> */}
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Input Section */}
           <section className="space-y-6">
             <div className="space-y-2">
-              <Card className="overflow-hidden border-2 transition-colors focus-within:border-[hsl(var(--accent-primary))]">
+              <Card className="p-0">
                 <Textarea
                   placeholder="Enter text to transform..."
                   value={text}
