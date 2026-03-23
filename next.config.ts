@@ -1,9 +1,10 @@
-/** @type {import('next').NextConfig} */
+import { NextConfig } from "next";
 
-const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: false, // Enable ESLint during builds
-  },
+const nextConfig: NextConfig = {
+  /* config options here */
+  transpilePackages: ["@ansospace/ui"],
+  reactCompiler: true,
+  cacheComponents: true,
 };
 
 export default nextConfig;

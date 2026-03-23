@@ -1,28 +1,25 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Geist, Geist_Mono } from "next/font/google";
 import React from "react";
 
-import { Analytics } from "@vercel/analytics/react";
+import "@ansospace/ui/globals.css";
 
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster } from "@/components/ui/toaster";
+import { RootProviders } from "./providers";
 
-import "./globals.css";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+const geistSans = Geist({
   variable: "--font-geist-sans",
-  weight: "100 900",
+  subsets: ["latin"],
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
+
+const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  weight: "100 900",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "Humanize AI",
   description: "Humanize your AI generated text",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -33,11 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
-          <Analytics />
-        </ThemeProvider>
+        <RootProviders>{children}</RootProviders>
       </body>
     </html>
   );
