@@ -101,8 +101,6 @@ export default function Home() {
       </header>
 
       <main className="container mx-auto max-w-6xl px-4 py-8">
-        {/* <Typography variant="h1" className="mb-8 text-center">AI Text Humanizer</Typography> */}
-
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Input Section */}
           <section className="space-y-6">
